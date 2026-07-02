@@ -26,6 +26,22 @@ work/decrypted_history.json
 # Node
 node_modules/
 
+# Keil MDK build artifacts
+firmware/MDK-ARM/STM32L051_8CH/
+firmware/MDK-ARM/DebugConfig/
+firmware/MDK-ARM/RTE/
+*.uvguix.*
+*.o
+*.d
+*.crf
+*.lnp
+*.dep
+*.htm
+*.axf
+*.hex
+*.build_log.htm
+*.iex
+
 # Temporary files
 *.tmp
 *.bak

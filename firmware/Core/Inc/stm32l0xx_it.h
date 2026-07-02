@@ -1,0 +1,113 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file    stm32l0xx_it.h
+  * @brief   This file contains the headers of the interrupt handlers.
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
+  *
+ ******************************************************************************
+  */
+/* USER CODE END Header */
+
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __STM32L0xx_IT_H
+#define __STM32L0xx_IT_H
+
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+
+/* USER CODE END Includes */
+
+/* Exported types ------------------------------------------------------------*/
+/* USER CODE BEGIN ET */
+
+/* USER CODE END ET */
+
+/* Exported constants --------------------------------------------------------*/
+/* USER CODE BEGIN EC */
+
+/* USER CODE END EC */
+
+/* Exported macro ------------------------------------------------------------*/
+/* USER CODE BEGIN EM */
+
+/* USER CODE END EM */
+
+/* Exported functions prototypes ---------------------------------------------*/
+/**
+  * @brief  Handle the non-maskable interrupt.
+  * @retval None
+  */
+void NMI_Handler(void);
+
+/**
+  * @brief  Handle the hard fault interrupt.
+  * @retval None
+  */
+void HardFault_Handler(void);
+
+/**
+  * @brief  Handle the system service call interrupt.
+  * @retval None
+  */
+void SVC_Handler(void);
+
+/**
+  * @brief  Handle the PendSV interrupt.
+  * @retval None
+  */
+void PendSV_Handler(void);
+
+/**
+  * @brief  Handle the system tick interrupt.
+  * @retval None
+  */
+void SysTick_Handler(void);
+
+/**
+  * @brief  Handle EXTI line 4 to 15 interrupts.
+  * @retval None
+  */
+void EXTI4_15_IRQHandler(void);
+
+/**
+  * @brief  Handle USART1 global interrupt.
+  * @retval None
+  */
+void USART1_IRQHandler(void);
+
+/**
+  * @brief  Handle USART2 global interrupt.
+  * @retval None
+  */
+void USART2_IRQHandler(void);
+
+/**
+  * @brief  Handle LPUART1 global interrupt.
+  * @retval None
+  */
+void LPUART1_IRQHandler(void);
+/* USER CODE BEGIN EFP */
+
+/* USER CODE END EFP */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __STM32L0xx_IT_H */
+
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
