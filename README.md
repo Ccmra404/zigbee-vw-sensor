@@ -160,6 +160,32 @@ C    = S(读数) T(温度) Z(清零) B(波特率) C(校准) F(频率) K(K值) M(
     └── ch8_logic_diagram.png
 ```
 
+## Changelog
+
+### v2.0.0 (2026-07-02) — 重大重构
+
+**从 4 通道 → 8 通道，单文件 → 模块化架构**
+
+| 方面 | v1.x (VW1004) | v2.0 (VM101) |
+|------|---------------|--------------|
+| 通道数 | 4 | **8** |
+| 代码结构 | 单文件 `main.c` ~2200 行 | **12 个模块** |
+| 通道切换 | VW1004 内部 | GPIO PB0-PB7 外部模拟开关 |
+| 测量方式 | 单次读取 4 路 | 逐通道分时采集 |
+| 通道验证 | 硬编码 4 路比较 | `CH8_IsLocalChannelId()` 范围检查 |
+| 广播响应 | 手动 bitmask | `CH8_NextPendingChannelIndex()` |
+| 拨码开关 | PB6-PB9 DIP 组地址 | **已移除** |
+| 状态机 | 内联 switch | 独立 `app_controller` 模块 |
+| 无线管理 | `main.c` 内静态函数 | `wireless_board` 模块 |
+
+**新增模块**:
+- `app_controller.c` — 顶层状态机
+- `ch8_measure.c` — 8 通道采集
+- `zdyh_cmd.c` — ZDYH 协议处理
+- `hy65_ascii_cmd.c` — 65TX/65RX ASCII 协议
+- `hy65_protocol.c` — 帧构造 & 校验
+- `wireless_board.c` — GPIO 电源管理
+
 ## 相关项目
 
 - PCB 设计: EasyEDA Pro (`.eprj2`)
