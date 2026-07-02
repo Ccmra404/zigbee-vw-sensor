@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# EasyEDA / EDA project files (large binary)
+*.eprj2
+
+# Decrypted / extracted data (may contain sensitive info)
+work/history_extract/
+work/decrypted_history.json
+
+# Node
+node_modules/
+
+# Temporary files
+*.tmp
+*.bak
+*.log
