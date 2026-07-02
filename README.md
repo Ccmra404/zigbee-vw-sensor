@@ -186,12 +186,6 @@ C    = S(读数) T(温度) Z(清零) B(波特率) C(校准) F(频率) K(K值) M(
 - `hy65_protocol.c` — 帧构造 & 校验
 - `wireless_board.c` — GPIO 电源管理
 
-## 相关项目
-
-- PCB 设计: EasyEDA Pro (`.eprj2`)
-- 提交历史: [GitHub](https://github.com/Ccmra101/zigbee-vw-sensor)
-- SVN: `http://43.136.171.171/svn/刘鸣工作管理/STM32L051_8CH`
-
 ## License
 
 Copyright © Ccmra
