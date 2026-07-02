@@ -1,7 +1,7 @@
 ﻿#include "wireless_board.h"
-#include "app_controller.h"
 #include "app_config.h"
 #include "app_delay.h"
+#include "app_uart.h"
 #include "gpio.h"
 #include "usart.h"
 
@@ -15,15 +15,18 @@ static u8 DRF1609CfgMsg[42] = {0xFC,0x27,0x07,0x02,0x65,0x01,0x14,
 
 /**
   * @brief  Check whether the latest Zigbee response matches the config ACK.
+  * @param[in] rxBuffer Zigbee receive buffer.
+  * @param[in] length Received byte count.
   * @retval 1 if the response is valid, otherwise 0.
   */
-static u8 Wireless_IsZigbeeConfigAck(void)
+static u8 Wireless_IsZigbeeConfigAck(const u8 *rxBuffer, int length)
 {
-	if(RxBuffer2[0] == 0xFA
-		&& RxBuffer2[1] == 0x01
-		&& RxBuffer2[2] == 0x0A
-		&& RxBuffer2[3] == 0x07
-		&& RxBuffer2[4] == 0x0C)
+	if(length >= 5
+		&& rxBuffer[0] == 0xFA
+		&& rxBuffer[1] == 0x01
+		&& rxBuffer[2] == 0x0A
+		&& rxBuffer[3] == 0x07
+		&& rxBuffer[4] == 0x0C)
 	{
 		return 1;
 	}
@@ -188,6 +191,7 @@ void Wireless_PowerOffModules(void)
   */
 void Wireless_InitZigbeeOrFault(void)
 {
+	u8 ackOk = 0;
 	int i = 0;
 	u32 tmrcnt = 0;
 
@@ -201,12 +205,10 @@ void Wireless_InitZigbeeOrFault(void)
 		{
 			if(mb_usart2_t.rx_end_flg == 1)
 			{
-				for(i = 0;i < MsgFlag2;i++)
-				{
-					RxBuffer2[i] = mb_usart2_t.rx_buf[i];
-				}
+				ackOk = Wireless_IsZigbeeConfigAck(mb_usart2_t.rx_buf, MsgFlag2);
 				mb_usart2_t.rx_end_flg = 0;
-				if(Wireless_IsZigbeeConfigAck())
+				MsgFlag2 = 0;
+				if(ackOk)
 				{
 					ZigbeeCfgFlag = 1;
 					__disable_irq();
@@ -227,12 +229,10 @@ void Wireless_InitZigbeeOrFault(void)
 				{
 					if(mb_usart2_t.rx_end_flg == 1)
 					{
-						for(i = 0;i < MsgFlag2;i++)
-						{
-							RxBuffer2[i] = mb_usart2_t.rx_buf[i];
-						}
+						ackOk = Wireless_IsZigbeeConfigAck(mb_usart2_t.rx_buf, MsgFlag2);
 						mb_usart2_t.rx_end_flg = 0;
-						if(Wireless_IsZigbeeConfigAck())
+						MsgFlag2 = 0;
+						if(ackOk)
 						{
 							ZigbeeCfgFlag = 1;
 							__disable_irq();
@@ -270,12 +270,10 @@ void Wireless_InitZigbeeOrFault(void)
 		{
 			if(mb_usart2_t.rx_end_flg == 1)
 			{
-				for(i = 0;i < MsgFlag2;i++)
-				{
-					RxBuffer2[i] = mb_usart2_t.rx_buf[i];
-				}
+				ackOk = Wireless_IsZigbeeConfigAck(mb_usart2_t.rx_buf, MsgFlag2);
 				mb_usart2_t.rx_end_flg = 0;
-				if(Wireless_IsZigbeeConfigAck())
+				MsgFlag2 = 0;
+				if(ackOk)
 				{
 					for(i = 0;i < 3;i++)
 					{

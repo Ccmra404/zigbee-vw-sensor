@@ -1,6 +1,7 @@
 #include "app_controller.h"
 #include "app_config.h"
 #include "app_delay.h"
+#include "app_uart.h"
 #include "ch8_measure.h"
 #include "gpio.h"
 #include "hy65_ascii_cmd.h"
@@ -17,18 +18,8 @@
 
 extern void SystemClock_Config(void);
 
-static u8 TxBuffer1[MB_BUF_SIZE];
 static u8 TxBuffer2[MB_BUF_SIZE];
-u8 RxBuffer2[MB_BUF_SIZE];
-static u8 RxBuffer3[MB_BUF_SIZE];
-
-__IO char MsgFlag1;
-__IO char MsgFlag2;
-__IO char MsgFlag3;
-
-MB_PARAM mb_usart1_t;
-MB_PARAM mb_usart2_t;
-MB_PARAM mb_usart3_t;
+static u8 RxBuffer2[MB_BUF_SIZE];
 
 static int TestValue[CH8_TEST_VALUE_SIZE] = {0};
 
@@ -56,38 +47,6 @@ typedef struct
 	u32 zigbeeRefreshTick;
 	u32 idleSleepTick;
 } APP_CONTEXT;
-
-/**
-  * @brief  Initialize software receive states for all application UARTs.
-  * @retval None
-  */
-static void App_InitSerialContexts(void)
-{
-	mbslave_init(&mb_usart1_t);
-	mbslave_init(&mb_usart2_t);
-	mbslave_init(&mb_usart3_t);
-}
-
-/**
-  * @brief  Copy a completed UART frame into an application buffer.
-  * @param[out] dst Destination buffer.
-  * @param[in] src Source UART receive buffer.
-  * @param[in] length Received byte count.
-  * @retval Copied byte count after bounds checking.
-  */
-static int App_CopyRxData(u8 *dst, const u8 *src, int length)
-{
-	if(length <= 0)
-	{
-		return 0;
-	}
-	if(length > MB_BUF_SIZE)
-	{
-		length = MB_BUF_SIZE;
-	}
-	memcpy(dst, src, length);
-	return length;
-}
 
 /**
   * @brief  Blink the status LED to indicate that the remote module is available.
@@ -241,10 +200,10 @@ static APP_STATE App_HandleRemoteWake(APP_CONTEXT *ctx)
 
 	if(mb_usart3_t.rx_end_flg == 1)
 	{
-		length = App_CopyRxData(RxBuffer3, mb_usart3_t.rx_buf, MsgFlag3);
+		length = AppUart_LimitFrameLength(MsgFlag3);
 		mb_usart3_t.rx_end_flg = 0;
 		MsgFlag3 = 0;
-		if(App_RemoteCommandRequestsStart(RxBuffer3, length))
+		if(App_RemoteCommandRequestsStart(mb_usart3_t.rx_buf, length))
 		{
 			return APP_STATE_SYS_INIT;
 		}
@@ -296,7 +255,6 @@ static void App_ClearRuntimeRemoteFrame(void)
 	{
 		mb_usart3_t.rx_end_flg = 0;
 		MsgFlag3 = 0;
-		memset(RxBuffer3, 0, sizeof(RxBuffer3));
 	}
 }
 
@@ -333,8 +291,7 @@ static void App_StartVm101Relay(int length, APP_CONTEXT *ctx)
 	mb_usart1_t.rx_end_flg = 0;
 	MsgFlag1 = 0;
 	ctx->relayMode = 1;
-	memcpy(TxBuffer1, RxBuffer2, length);
-	Usart_Printf_Len(&huart1, TxBuffer1, (uint16_t)length);
+	Usart_Printf_Len(&huart1, RxBuffer2, (uint16_t)length);
 }
 
 /**
@@ -355,7 +312,7 @@ static u8 App_ProcessZigbeeFrame(APP_CONTEXT *ctx)
 
 	ctx->zigbeeRefreshTick = uwTick;
 	ctx->idleSleepTick = uwTick;
-	length = App_CopyRxData(RxBuffer2, mb_usart2_t.rx_buf, MsgFlag2);
+	length = AppUart_CopyRxData(RxBuffer2, mb_usart2_t.rx_buf, MsgFlag2);
 	mb_usart2_t.rx_end_flg = 0;
 	MsgFlag2 = 0;
 
@@ -402,7 +359,7 @@ static void App_ProcessVm101RelayResponse(APP_CONTEXT *ctx)
 		return;
 	}
 
-	length = App_CopyRxData(TxBuffer2, mb_usart1_t.rx_buf, MsgFlag1);
+	length = AppUart_CopyRxData(TxBuffer2, mb_usart1_t.rx_buf, MsgFlag1);
 	mb_usart1_t.rx_end_flg = 0;
 	MsgFlag1 = 0;
 	if(length > 0)
@@ -449,7 +406,7 @@ void App_Run(void)
 	ctx.lastCmd = 0x80;
 
 	AppConfig_Load();
-	App_InitSerialContexts();
+	AppUart_InitContexts();
 	ctx.remoteModuleOk = App_CheckWirelessAtStartup();
 
 	while(1)

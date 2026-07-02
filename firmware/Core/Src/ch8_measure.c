@@ -1,5 +1,5 @@
 #include "ch8_measure.h"
-#include "app_controller.h"
+#include "app_uart.h"
 #include "usart.h"
 
 #define CH8_SELECT_GAP_MS 10U
