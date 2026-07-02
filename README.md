@@ -168,4 +168,4 @@ C    = S(读数) T(温度) Z(清零) B(波特率) C(校准) F(频率) K(K值) M(
 
 ## License
 
-Proprietary — 武汉华远测控技术有限公司
+Copyright © Ccmra
