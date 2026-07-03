@@ -44,23 +44,23 @@ extern u8 workMode;
 extern APP_FLOAT_WORD kindex;
 
 /**
-  * @brief  Load persistent application parameters, or initialize defaults.
-  * @retval None
+  * @brief  读取应用持久化参数；无有效参数时初始化默认值。
+  * @retval 无
   */
 void AppConfig_Load(void);
 
 /**
-  * @brief  Read one 32-bit word from the persistent configuration area.
-  * @param[in] addr Flash data EEPROM address to read.
-  * @retval Stored 32-bit value.
+  * @brief  从持久化配置区读取一个 32 位数据。
+  * @param[in] addr 待读取的 Flash Data EEPROM 地址。
+  * @retval 读取到的 32 位数据。
   */
 uint32_t AppConfig_ReadWord(uint32_t addr);
 
 /**
-  * @brief  Write one 32-bit data word to the configured flash data area.
-  * @param[in] addr Flash address to program.
-  * @param[in] data 32-bit value to write.
-  * @retval None
+  * @brief  向配置区写入一个 32 位数据。
+  * @param[in] addr 待写入的 Flash 地址。
+  * @param[in] data 待写入的 32 位数据。
+  * @retval 无
   */
 void SaveData(uint32_t addr, uint32_t data);
 

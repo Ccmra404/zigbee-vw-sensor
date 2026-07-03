@@ -4,8 +4,8 @@
 #include "main.h"
 
 /**
-  * @brief  Run the CH8 application state machine.
-  * @retval None
+  * @brief  运行 CH8 应用状态机。
+  * @retval 无
   */
 void App_Run(void);
 

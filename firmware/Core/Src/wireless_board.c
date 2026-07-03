@@ -14,10 +14,10 @@ static u8 DRF1609CfgMsg[42] = {0xFC,0x27,0x07,0x02,0x65,0x01,0x14,
 								0x00,0x02,0x11,0x12,0x13,0x14,0xA0};
 
 /**
-  * @brief  Check whether the latest Zigbee response matches the config ACK.
-  * @param[in] rxBuffer Zigbee receive buffer.
-  * @param[in] length Received byte count.
-  * @retval 1 if the response is valid, otherwise 0.
+  * @brief  判断最新 Zigbee 响应是否为配置确认帧。
+  * @param[in] rxBuffer Zigbee 接收缓冲区。
+  * @param[in] length 接收到的字节数。
+  * @retval 1 表示响应有效，0 表示响应无效。
   */
 static u8 Wireless_IsZigbeeConfigAck(const u8 *rxBuffer, int length)
 {
@@ -34,9 +34,9 @@ static u8 Wireless_IsZigbeeConfigAck(const u8 *rxBuffer, int length)
 }
 
 /**
-  * @brief  Blink the status LED forever after a fatal wireless-module error.
-  * @param[in] intervalMs LED on/off interval in milliseconds.
-  * @retval None
+  * @brief  无线模块严重错误后持续闪烁状态灯。
+  * @param[in] intervalMs LED 亮灭间隔，单位为毫秒。
+  * @retval 无
   */
 static void Wireless_FaultBlinkForever(u32 intervalMs)
 {
@@ -51,8 +51,8 @@ static void Wireless_FaultBlinkForever(u32 intervalMs)
 }
 
 /**
-  * @brief  Configure GPIO, UART and clock settings before entering Stop mode.
-  * @retval None
+  * @brief  进入 Stop 模式前配置 GPIO、UART 和时钟。
+  * @retval 无
   */
 void Wireless_PrepareStopMode(void)
 {
@@ -87,8 +87,8 @@ void Wireless_PrepareStopMode(void)
 }
 
 /**
-  * @brief  Restore GPIO and wake-up interrupt configuration after Stop mode.
-  * @retval None
+  * @brief  Stop 模式退出后恢复 GPIO 和唤醒中断配置。
+  * @retval 无
   */
 void Wireless_RestoreAfterStopMode(void)
 {
@@ -117,8 +117,8 @@ void Wireless_RestoreAfterStopMode(void)
 }
 
 /**
-  * @brief  Configure the wireless module mode pins and status outputs.
-  * @retval None
+  * @brief  配置无线模块模式引脚和状态输出。
+  * @retval 无
   */
 void Wireless_M0M1ModeConfig(void)
 {
@@ -145,8 +145,8 @@ void Wireless_M0M1ModeConfig(void)
 }
 
 /**
-  * @brief  Power on Zigbee, sensor power and VM101 back-end rails for startup checks.
-  * @retval None
+  * @brief  启动检查阶段打开 Zigbee、传感器电源和 VM101 后级电源。
+  * @retval 无
   */
 void Wireless_PowerOnStartupModules(void)
 {
@@ -159,8 +159,8 @@ void Wireless_PowerOnStartupModules(void)
 }
 
 /**
-  * @brief  Power on Zigbee, sensor power and VM101 back-end rails for runtime.
-  * @retval None
+  * @brief  运行阶段打开 Zigbee、传感器电源和 VM101 后级电源。
+  * @retval 无
   */
 void Wireless_PowerOnRuntimeModules(void)
 {
@@ -175,8 +175,8 @@ void Wireless_PowerOnRuntimeModules(void)
 }
 
 /**
-  * @brief  Power off Zigbee, sensor power and VM101 back-end rails.
-  * @retval None
+  * @brief  关闭 Zigbee、传感器电源和 VM101 后级电源。
+  * @retval 无
   */
 void Wireless_PowerOffModules(void)
 {
@@ -186,8 +186,8 @@ void Wireless_PowerOffModules(void)
 }
 
 /**
-  * @brief  Initialize or verify the Zigbee module; stays in fault blink on failure.
-  * @retval None
+  * @brief  初始化或校验 Zigbee 模块；失败时停留在故障闪灯状态。
+  * @retval 无
   */
 void Wireless_InitZigbeeOrFault(void)
 {
@@ -299,8 +299,8 @@ void Wireless_InitZigbeeOrFault(void)
 }
 
 /**
-  * @brief  Check whether the E330 remote module can respond to parameter reads.
-  * @retval 1 if the module responds with expected parameters, otherwise 0.
+  * @brief  检查 E330 遥控模块是否能正常响应参数读取。
+  * @retval 1 表示模块返回预期参数，0 表示未返回预期参数。
   */
 u8 Wireless_CheckRemoteModule(void)
 {
@@ -355,9 +355,9 @@ u8 Wireless_CheckRemoteModule(void)
 }
 
 /**
-  * @brief  Initialize GPIO and UARTs used by the runtime measurement state.
-  * @param[in] remoteModuleOk 1 if the remote module is available, otherwise 0.
-  * @retval None
+  * @brief  初始化运行测量阶段使用的 GPIO 和 UART。
+  * @param[in] remoteModuleOk 1 表示遥控模块可用，0 表示不可用。
+  * @retval 无
   */
 void Wireless_StartRuntimeUarts(u8 remoteModuleOk)
 {

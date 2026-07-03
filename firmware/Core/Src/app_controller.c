@@ -49,8 +49,8 @@ typedef struct
 } APP_CONTEXT;
 
 /**
-  * @brief  Blink the status LED to indicate that the remote module is available.
-  * @retval None
+  * @brief  闪烁状态灯，表示遥控模块可用。
+  * @retval 无
   */
 static void App_BlinkRemoteReady(void)
 {
@@ -66,8 +66,8 @@ static void App_BlinkRemoteReady(void)
 }
 
 /**
-  * @brief  Power and verify wireless modules during boot.
-  * @retval 1 if the remote module is available, otherwise 0.
+  * @brief  上电启动阶段给无线模块供电并检查模块状态。
+  * @retval 1 表示遥控模块可用，0 表示不可用。
   */
 static u8 App_CheckWirelessAtStartup(void)
 {
@@ -87,8 +87,8 @@ static u8 App_CheckWirelessAtStartup(void)
 }
 
 /**
-  * @brief  Restore clocks and LPUART receive after Stop-mode wake-up.
-  * @retval None
+  * @brief  Stop 模式唤醒后恢复时钟和 LPUART 接收。
+  * @retval 无
   */
 static void App_RestoreAfterStopWake(void)
 {
@@ -109,9 +109,9 @@ static void App_RestoreAfterStopWake(void)
 }
 
 /**
-  * @brief  Enter Stop mode and arm LPUART receive for remote wake data.
-  * @param[in,out] ctx Application state context.
-  * @retval None
+  * @brief  进入 Stop 模式，并打开 LPUART 接收等待遥控唤醒数据。
+  * @param[in,out] ctx 应用状态上下文。
+  * @retval 无
   */
 static void App_EnterStopAndWaitRemote(APP_CONTEXT *ctx)
 {
@@ -126,10 +126,10 @@ static void App_EnterStopAndWaitRemote(APP_CONTEXT *ctx)
 }
 
 /**
-  * @brief  Check whether a 433 MHz remote frame asks the board to start.
-  * @param[in] rxBuffer Received remote-frame buffer.
-  * @param[in] length Received frame length.
-  * @retval 1 if at least one channel command is active, otherwise 0.
+  * @brief  判断 433 MHz 遥控帧是否要求板卡启动。
+  * @param[in] rxBuffer 接收到的遥控帧缓冲区。
+  * @param[in] length 接收到的帧长度。
+  * @retval 1 表示至少有一路通道命令有效，0 表示无启动命令。
   */
 static u8 App_RemoteCommandRequestsStart(const u8 *rxBuffer, int length)
 {
@@ -169,9 +169,9 @@ static u8 App_RemoteCommandRequestsStart(const u8 *rxBuffer, int length)
 }
 
 /**
-  * @brief  Handle the first-run state before entering remote wake mode.
-  * @param[in,out] ctx Application state context.
-  * @retval Next application state.
+  * @brief  处理首次运行状态，然后进入遥控唤醒模式。
+  * @param[in,out] ctx 应用状态上下文。
+  * @retval 下一个应用状态。
   */
 static APP_STATE App_HandleFirstRun(APP_CONTEXT *ctx)
 {
@@ -185,9 +185,9 @@ static APP_STATE App_HandleFirstRun(APP_CONTEXT *ctx)
 }
 
 /**
-  * @brief  Judge whether the received remote wake frame should start runtime.
-  * @param[in,out] ctx Application state context.
-  * @retval Next application state.
+  * @brief  判断收到的遥控唤醒帧是否应启动运行流程。
+  * @param[in,out] ctx 应用状态上下文。
+  * @retval 下一个应用状态。
   */
 static APP_STATE App_HandleRemoteWake(APP_CONTEXT *ctx)
 {
@@ -213,9 +213,9 @@ static APP_STATE App_HandleRemoteWake(APP_CONTEXT *ctx)
 }
 
 /**
-  * @brief  Initialize peripherals and protocol state for runtime operation.
-  * @param[in,out] ctx Application state context.
-  * @retval None
+  * @brief  初始化运行阶段需要的外设和协议状态。
+  * @param[in,out] ctx 应用状态上下文。
+  * @retval 无
   */
 static void App_InitRunMode(APP_CONTEXT *ctx)
 {
@@ -232,9 +232,9 @@ static void App_InitRunMode(APP_CONTEXT *ctx)
 }
 
 /**
-  * @brief  Perform deferred all-channel measurement if requested.
-  * @param[in,out] ctx Application state context.
-  * @retval None
+  * @brief  按需执行延迟触发的全通道测量。
+  * @param[in,out] ctx 应用状态上下文。
+  * @retval 无
   */
 static void App_RunPendingMeasurement(APP_CONTEXT *ctx)
 {
@@ -246,8 +246,8 @@ static void App_RunPendingMeasurement(APP_CONTEXT *ctx)
 }
 
 /**
-  * @brief  Drop remote frames received while the board is already running.
-  * @retval None
+  * @brief  清除板卡运行期间收到的遥控帧。
+  * @retval 无
   */
 static void App_ClearRuntimeRemoteFrame(void)
 {
@@ -259,9 +259,9 @@ static void App_ClearRuntimeRemoteFrame(void)
 }
 
 /**
-  * @brief  Reinitialize Zigbee receive if no frame has arrived for a while.
-  * @param[in,out] ctx Application state context.
-  * @retval None
+  * @brief  长时间未收到 Zigbee 数据时重新初始化接收。
+  * @param[in,out] ctx 应用状态上下文。
+  * @retval 无
   */
 static void App_RefreshZigbeeReceiver(APP_CONTEXT *ctx)
 {
@@ -276,10 +276,10 @@ static void App_RefreshZigbeeReceiver(APP_CONTEXT *ctx)
 }
 
 /**
-  * @brief  Forward an unhandled Zigbee frame to the VM101 measurement module.
-  * @param[in] length Number of bytes to forward.
-  * @param[in,out] ctx Application state context.
-  * @retval None
+  * @brief  将未被本机处理的 Zigbee 帧转发给 VM101 测量模块。
+  * @param[in] length 待转发字节数。
+  * @param[in,out] ctx 应用状态上下文。
+  * @retval 无
   */
 static void App_StartVm101Relay(int length, APP_CONTEXT *ctx)
 {
@@ -295,9 +295,9 @@ static void App_StartVm101Relay(int length, APP_CONTEXT *ctx)
 }
 
 /**
-  * @brief  Process one completed Zigbee frame.
-  * @param[in,out] ctx Application state context.
-  * @retval 1 if the caller should skip the rest of the loop, otherwise 0.
+  * @brief  处理一帧完整的 Zigbee 数据。
+  * @param[in,out] ctx 应用状态上下文。
+  * @retval 1 表示调用者应跳过本轮循环后续处理，0 表示继续处理。
   */
 static u8 App_ProcessZigbeeFrame(APP_CONTEXT *ctx)
 {
@@ -346,9 +346,9 @@ static u8 App_ProcessZigbeeFrame(APP_CONTEXT *ctx)
 }
 
 /**
-  * @brief  Forward VM101 relay response back to Zigbee.
-  * @param[in,out] ctx Application state context.
-  * @retval None
+  * @brief  将 VM101 透传响应转发回 Zigbee。
+  * @param[in,out] ctx 应用状态上下文。
+  * @retval 无
   */
 static void App_ProcessVm101RelayResponse(APP_CONTEXT *ctx)
 {
@@ -369,9 +369,9 @@ static void App_ProcessVm101RelayResponse(APP_CONTEXT *ctx)
 }
 
 /**
-  * @brief  Run one iteration of the active measurement and communication state.
-  * @param[in,out] ctx Application state context.
-  * @retval Next application state.
+  * @brief  执行运行状态下的一轮测量和通信处理。
+  * @param[in,out] ctx 应用状态上下文。
+  * @retval 下一个应用状态。
   */
 static APP_STATE App_HandleRunMode(APP_CONTEXT *ctx)
 {
@@ -393,8 +393,8 @@ static APP_STATE App_HandleRunMode(APP_CONTEXT *ctx)
 }
 
 /**
-  * @brief  Run the CH8 application state machine.
-  * @retval None
+  * @brief  运行 CH8 应用状态机。
+  * @retval 无
   */
 void App_Run(void)
 {

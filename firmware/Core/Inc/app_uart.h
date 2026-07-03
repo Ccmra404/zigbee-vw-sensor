@@ -13,24 +13,24 @@ extern MB_PARAM mb_usart2_t;
 extern MB_PARAM mb_usart3_t;
 
 /**
-  * @brief  Initialize software receive states for all application UARTs.
-  * @retval None
+  * @brief  初始化所有应用串口的软件接收状态。
+  * @retval 无
   */
 void AppUart_InitContexts(void);
 
 /**
-  * @brief  Clamp an interrupt-reported UART frame length to the local buffer size.
-  * @param[in] length Interrupt-reported byte count.
-  * @retval Safe byte count for MB_BUF_SIZE buffers.
+  * @brief  将中断上报的串口帧长度限制在本地缓冲区范围内。
+  * @param[in] length 中断上报的字节数。
+  * @retval 适用于 MB_BUF_SIZE 缓冲区的安全字节数。
   */
 int AppUart_LimitFrameLength(int length);
 
 /**
-  * @brief  Copy a completed UART frame into an application buffer.
-  * @param[out] dst Destination buffer.
-  * @param[in] src Source UART receive buffer.
-  * @param[in] length Received byte count.
-  * @retval Copied byte count after bounds checking.
+  * @brief  将已接收完成的串口帧复制到应用缓冲区。
+  * @param[out] dst 目标缓冲区。
+  * @param[in] src 源串口接收缓冲区。
+  * @param[in] length 接收到的字节数。
+  * @retval 边界检查后的实际复制字节数。
   */
 int AppUart_CopyRxData(u8 *dst, const u8 *src, int length);
 

@@ -5,9 +5,9 @@
 #include "usart.h"
 
 /**
-  * @brief  Send a prepared 40-byte ZDYH response frame.
-  * @param[in,out] txBuffer ZDYH response frame buffer.
-  * @retval None
+  * @brief  发送已准备好的 40 字节 ZDYH 响应帧。
+  * @param[in,out] txBuffer ZDYH 响应帧缓冲区。
+  * @retval 无
   */
 static void ZDYH_SendFrame(u8 *txBuffer)
 {
@@ -17,10 +17,10 @@ static void ZDYH_SendFrame(u8 *txBuffer)
 }
 
 /**
-  * @brief  Store a 32-bit signed value into four little-endian response bytes.
-  * @param[in,out] buffer Destination byte buffer.
-  * @param[in] value Value to store.
-  * @retval None
+  * @brief  将 32 位有符号数按小端格式写入 4 个响应字节。
+  * @param[in,out] buffer 目标字节缓冲区。
+  * @param[in] value 待写入数值。
+  * @retval 无
   */
 static void ZDYH_WriteInt32(u8 *buffer, int value)
 {
@@ -31,18 +31,18 @@ static void ZDYH_WriteInt32(u8 *buffer, int value)
 }
 
 /**
-  * @brief  Process one 40-byte ZDYH protocol command frame.
-  * @param[in] rxBuffer Received UART buffer.
-  * @param[in,out] txBuffer Response buffer.
-  * @param[in,out] testValue CH8 measurement buffer.
-  * @param[in,out] bcState Broadcast response state.
-  * @param[in,out] bcResp Broadcast channel response mask.
-  * @param[in,out] data32Bak Previous broadcast response ID.
-  * @param[in,out] lastCmd Last accepted command code.
-  * @param[in,out] lastMsg Last accepted command payload.
-  * @param[in,out] errorCode Current measurement/protocol error code.
-  * @param[in,out] measureFlag Deferred measurement request flag.
-  * @retval ZDYH_NOT_MATCH if the frame is not ZDYH; otherwise handling status.
+  * @brief  处理一帧 40 字节 ZDYH 协议命令。
+  * @param[in] rxBuffer 接收到的串口缓冲区。
+  * @param[in,out] txBuffer 响应缓冲区。
+  * @param[in,out] testValue CH8 测量缓冲区。
+  * @param[in,out] bcState 广播响应状态。
+  * @param[in,out] bcResp 广播通道响应掩码。
+  * @param[in,out] data32Bak 上一次广播响应 ID。
+  * @param[in,out] lastCmd 上一次接收的有效命令码。
+  * @param[in,out] lastMsg 上一次接收的有效命令负载。
+  * @param[in,out] errorCode 当前测量或协议错误码。
+  * @param[in,out] measureFlag 延迟测量请求标志。
+  * @retval ZDYH_NOT_MATCH 表示不是 ZDYH 帧，其他值表示处理状态。
   */
 ZDYH_RESULT ZDYH_Process(u8 *rxBuffer, u8 *txBuffer, int *testValue,
 	u8 *bcState, u8 *bcResp, u32 *data32Bak,

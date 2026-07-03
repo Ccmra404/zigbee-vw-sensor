@@ -4,16 +4,16 @@
 #include "main.h"
 
 /**
-  * @brief  Busy-wait delay based on the HAL millisecond tick.
-  * @param[in] nms Delay time in milliseconds.
-  * @retval None
+  * @brief  基于 HAL 毫秒节拍的阻塞延时。
+  * @param[in] nms 延时时间，单位为毫秒。
+  * @retval 无
   */
 void delay_ms(u32 nms);
 
 /**
-  * @brief  Busy-wait delay with microsecond resolution using SysTick.
-  * @param[in] us Delay time in microseconds.
-  * @retval None
+  * @brief  基于 SysTick 的微秒级阻塞延时。
+  * @param[in] us 延时时间，单位为微秒。
+  * @retval 无
   */
 void delayMicroseconds(uint32_t us);
 

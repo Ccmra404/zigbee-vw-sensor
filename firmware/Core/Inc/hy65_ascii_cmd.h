@@ -12,14 +12,14 @@ typedef enum
 } HY65_ASCII_RESULT;
 
 /**
-  * @brief  Process one HY65 ASCII 65TX command frame.
-  * @param[in] rxBuffer Received UART buffer.
-  * @param[in,out] txBuffer Response buffer.
-  * @param[in] msgLen Received frame length.
-  * @param[in,out] testValue CH8 measurement buffer.
-  * @param[in,out] errorCode Current measurement/protocol error code.
-  * @param[in,out] measureFlag Deferred measurement request flag.
-  * @retval HY65_ASCII_NOT_MATCH if the frame is not 65TX; otherwise handling status.
+  * @brief  处理一帧 HY65 ASCII 65TX 命令。
+  * @param[in] rxBuffer 接收到的串口缓冲区。
+  * @param[in,out] txBuffer 响应缓冲区。
+  * @param[in] msgLen 接收到的帧长度。
+  * @param[in,out] testValue CH8 测量缓冲区。
+  * @param[in,out] errorCode 当前测量或协议错误码。
+  * @param[in,out] measureFlag 延迟测量请求标志。
+  * @retval HY65_ASCII_NOT_MATCH 表示不是 65TX 帧，其他值表示处理状态。
   */
 HY65_ASCII_RESULT HY65_AsciiProcess(u8 *rxBuffer, u8 *txBuffer, int msgLen, int *testValue, u8 *errorCode, u8 *measureFlag);
 
