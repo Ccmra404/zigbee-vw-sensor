@@ -13,7 +13,7 @@ static void ZDYH_SendFrame(u8 *txBuffer)
 {
 	HY65_AddCheckSum(txBuffer);
 	delay_ms(20);
-	Usart_Printf_Len(&huart2, txBuffer, 40);
+	Usart_Printf_Len(&huart1, txBuffer, 40);
 }
 
 /**

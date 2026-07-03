@@ -6,14 +6,12 @@
 
 extern __IO char MsgFlag1;
 extern __IO char MsgFlag2;
-extern __IO char MsgFlag3;
 
 extern MB_PARAM mb_usart1_t;
 extern MB_PARAM mb_usart2_t;
-extern MB_PARAM mb_usart3_t;
 
 /**
-  * @brief  初始化所有应用串口的软件接收状态。
+  * @brief  初始化 485 和 Zigbee 串口的软件接收状态。
   * @retval 无
   */
 void AppUart_InitContexts(void);

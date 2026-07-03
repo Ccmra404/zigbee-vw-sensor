@@ -78,12 +78,6 @@ void PendSV_Handler(void);
 void SysTick_Handler(void);
 
 /**
-  * @brief  Handle EXTI line 4 to 15 interrupts.
-  * @retval None
-  */
-void EXTI4_15_IRQHandler(void);
-
-/**
   * @brief  Handle USART1 global interrupt.
   * @retval None
   */
@@ -95,11 +89,6 @@ void USART1_IRQHandler(void);
   */
 void USART2_IRQHandler(void);
 
-/**
-  * @brief  Handle LPUART1 global interrupt.
-  * @retval None
-  */
-void LPUART1_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

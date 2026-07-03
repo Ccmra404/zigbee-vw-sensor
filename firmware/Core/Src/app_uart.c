@@ -2,21 +2,18 @@
 
 __IO char MsgFlag1;
 __IO char MsgFlag2;
-__IO char MsgFlag3;
 
 MB_PARAM mb_usart1_t;
 MB_PARAM mb_usart2_t;
-MB_PARAM mb_usart3_t;
 
 /**
-  * @brief  初始化所有应用串口的软件接收状态。
+  * @brief  初始化 485 和 Zigbee 串口的软件接收状态。
   * @retval 无
   */
 void AppUart_InitContexts(void)
 {
 	mbslave_init(&mb_usart1_t);
 	mbslave_init(&mb_usart2_t);
-	mbslave_init(&mb_usart3_t);
 }
 
 /**

@@ -1,4 +1,4 @@
-#include "ch8_measure.h"
+﻿#include "ch8_measure.h"
 #include "app_uart.h"
 #include "usart.h"
 
@@ -12,10 +12,7 @@ static const uint16_t CH8CtrlPins[CH8_CHANNEL_COUNT] = {
 };
 
 /**
-  * @brief  使用 HAL 节拍延时指定毫秒数。
-  * @param[in] nms 延时时间，单位为毫秒。
-  * @retval 无
-  */
+  * @brief  浣跨敤 HAL 鑺傛媿寤舵椂鎸囧畾姣鏁般€?  * @param[in] nms 寤舵椂鏃堕棿锛屽崟浣嶄负姣銆?  * @retval 鏃?  */
 static void CH8_DelayMs(u32 nms)
 {
 	u32 start = HAL_GetTick();
@@ -25,9 +22,7 @@ static void CH8_DelayMs(u32 nms)
 }
 
 /**
-  * @brief  关闭 CH8 的 8 路通道选择输出。
-  * @retval 无
-  */
+  * @brief  鍏抽棴 CH8 鐨?8 璺€氶亾閫夋嫨杈撳嚭銆?  * @retval 鏃?  */
 void CH8_AllChannelsOff(void)
 {
 	HAL_GPIO_WritePin(GPIOB,
@@ -37,10 +32,7 @@ void CH8_AllChannelsOff(void)
 }
 
 /**
-  * @brief  清除全部通道后选择一路 CH8 测量通道。
-  * @param[in] channel 从 0 开始的通道序号，有效范围为 0 到 7。
-  * @retval 无
-  */
+  * @brief  娓呴櫎鍏ㄩ儴閫氶亾鍚庨€夋嫨涓€璺?CH8 娴嬮噺閫氶亾銆?  * @param[in] channel 浠?0 寮€濮嬬殑閫氶亾搴忓彿锛屾湁鏁堣寖鍥翠负 0 鍒?7銆?  * @retval 鏃?  */
 static void CH8_SelectChannel(u8 channel)
 {
 	CH8_AllChannelsOff();
@@ -53,11 +45,7 @@ static void CH8_SelectChannel(u8 channel)
 }
 
 /**
-  * @brief  判断指定 ID 是否属于本节点的 CH8 通道。
-  * @param[in] baseId 本节点分配到的首个通道 ID。
-  * @param[in] id 请求的通道 ID。
-  * @retval 1 表示本节点通道，0 表示不是本节点通道。
-  */
+  * @brief  鍒ゆ柇鎸囧畾 ID 鏄惁灞炰簬鏈妭鐐圭殑 CH8 閫氶亾銆?  * @param[in] baseId 鏈妭鐐瑰垎閰嶅埌鐨勯涓€氶亾 ID銆?  * @param[in] id 璇锋眰鐨勯€氶亾 ID銆?  * @retval 1 琛ㄧず鏈妭鐐归€氶亾锛? 琛ㄧず涓嶆槸鏈妭鐐归€氶亾銆?  */
 u8 CH8_IsLocalChannelId(u32 baseId, u32 id)
 {
 	if(id < baseId)
@@ -72,21 +60,14 @@ u8 CH8_IsLocalChannelId(u32 baseId, u32 id)
 }
 
 /**
-  * @brief  将本节点通道 ID 转换为从 0 开始的通道序号。
-  * @param[in] baseId 本节点分配到的首个通道 ID。
-  * @param[in] id 待转换的本节点通道 ID。
-  * @retval 从 0 开始的通道序号。
-  */
+  * @brief  灏嗘湰鑺傜偣閫氶亾 ID 杞崲涓轰粠 0 寮€濮嬬殑閫氶亾搴忓彿銆?  * @param[in] baseId 鏈妭鐐瑰垎閰嶅埌鐨勯涓€氶亾 ID銆?  * @param[in] id 寰呰浆鎹㈢殑鏈妭鐐归€氶亾 ID銆?  * @retval 浠?0 寮€濮嬬殑閫氶亾搴忓彿銆?  */
 u8 CH8_ChannelIndexFromId(u32 baseId, u32 id)
 {
 	return (u8)(id - baseId);
 }
 
 /**
-  * @brief  在响应掩码中查找第一个未回复通道。
-  * @param[in] mask 已回复通道位掩码，bit0 对应 CH1。
-  * @retval 第一个未回复通道的从 0 开始序号；全部回复时返回 0。
-  */
+  * @brief  鍦ㄥ搷搴旀帺鐮佷腑鏌ユ壘绗竴涓湭鍥炲閫氶亾銆?  * @param[in] mask 宸插洖澶嶉€氶亾浣嶆帺鐮侊紝bit0 瀵瑰簲 CH1銆?  * @retval 绗竴涓湭鍥炲閫氶亾鐨勪粠 0 寮€濮嬪簭鍙凤紱鍏ㄩ儴鍥炲鏃惰繑鍥?0銆?  */
 u8 CH8_NextPendingChannelIndex(u8 mask)
 {
 	u8 i = 0;
@@ -101,11 +82,7 @@ u8 CH8_NextPendingChannelIndex(u8 mask)
 }
 
 /**
-  * @brief  从 VM101 模块读取一帧 Modbus 测量数据。
-  * @param[out] freq VM101 返回的原始频率值。
-  * @param[out] temp VM101 返回的原始温度值。
-  * @retval 0 表示成功，非 0 表示超时或响应无效。
-  */
+  * @brief  浠?VM101 妯″潡璇诲彇涓€甯?Modbus 娴嬮噺鏁版嵁銆?  * @param[out] freq VM101 杩斿洖鐨勫師濮嬮鐜囧€笺€?  * @param[out] temp VM101 杩斿洖鐨勫師濮嬫俯搴﹀€笺€?  * @retval 0 琛ㄧず鎴愬姛锛岄潪 0 琛ㄧず瓒呮椂鎴栧搷搴旀棤鏁堛€?  */
 static int VM101_ReadOnce(int *freq, int *temp)
 {
 	u32 start = 0;
@@ -113,7 +90,7 @@ static int VM101_ReadOnce(int *freq, int *temp)
 
 	MsgFlag1 = 0;
 	mb_usart1_t.rx_end_flg = 0;
-	Usart_Printf_Len(&huart1,cmd,8);
+	Usart_Printf_Len(&huart2,cmd,8);
 	start = HAL_GetTick();
 
 	while(1)
@@ -140,15 +117,7 @@ static int VM101_ReadOnce(int *freq, int *temp)
 }
 
 /**
-  * @brief  计算单个 CH8 通道在当前模式下的结果字段。
-  * @param[in,out] testValue 使用 CH8_*_BASE 偏移的测量缓冲区。
-  * @param[in] referenceData 应变模式下每个通道的参考值。
-  * @param[in] channelIndex 从 0 开始的通道序号。
-  * @param[in] mode 0：应变；1：频率模数；2：频率修正。
-  * @param[in] kValue 应变计算系数。
-  * @param[in] correctScale 频率修正系数。
-  * @retval 无
-  */
+  * @brief  璁＄畻鍗曚釜 CH8 閫氶亾鍦ㄥ綋鍓嶆ā寮忎笅鐨勭粨鏋滃瓧娈点€?  * @param[in,out] testValue 浣跨敤 CH8_*_BASE 鍋忕Щ鐨勬祴閲忕紦鍐插尯銆?  * @param[in] referenceData 搴斿彉妯″紡涓嬫瘡涓€氶亾鐨勫弬鑰冨€笺€?  * @param[in] channelIndex 浠?0 寮€濮嬬殑閫氶亾搴忓彿銆?  * @param[in] mode 0锛氬簲鍙橈紱1锛氶鐜囨ā鏁帮紱2锛氶鐜囦慨姝ｃ€?  * @param[in] kValue 搴斿彉璁＄畻绯绘暟銆?  * @param[in] correctScale 棰戠巼淇绯绘暟銆?  * @retval 鏃?  */
 static void CH8_UpdateChannelResult(int *testValue, const int *referenceData, u8 channelIndex, u8 mode, float kValue, float correctScale)
 {
 	float current = 0;
@@ -186,12 +155,7 @@ static void CH8_UpdateChannelResult(int *testValue, const int *referenceData, u8
 }
 
 /**
-  * @brief  按工作模式选择对应的测量结果字段。
-  * @param[in] testValue CH8 测量缓冲区。
-  * @param[in] channelIndex 从 0 开始的通道序号。
-  * @param[in] mode 0：应变；1：频率模数；2 或其他：原始频率。
-  * @retval 选中的结果值。
-  */
+  * @brief  鎸夊伐浣滄ā寮忛€夋嫨瀵瑰簲鐨勬祴閲忕粨鏋滃瓧娈点€?  * @param[in] testValue CH8 娴嬮噺缂撳啿鍖恒€?  * @param[in] channelIndex 浠?0 寮€濮嬬殑閫氶亾搴忓彿銆?  * @param[in] mode 0锛氬簲鍙橈紱1锛氶鐜囨ā鏁帮紱2 鎴栧叾浠栵細鍘熷棰戠巼銆?  * @retval 閫変腑鐨勭粨鏋滃€笺€?  */
 int CH8_ResultForMode(const int *testValue, u8 channelIndex, u8 mode)
 {
 	if(0 == mode)
@@ -206,14 +170,7 @@ int CH8_ResultForMode(const int *testValue, u8 channelIndex, u8 mode)
 }
 
 /**
-  * @brief  测量 CH8 全部通道并计算当前模式下的结果。
-  * @param[in,out] testValue 使用 CH8_*_BASE 偏移的测量缓冲区。
-  * @param[in] referenceData 应变模式下每个通道的参考值。
-  * @param[in] mode 0：应变；1：频率模数；2：频率修正。
-  * @param[in] kValue 应变计算系数。
-  * @param[in] correctScale 频率修正系数。
-  * @retval 0 表示成功，非 0 表示 VM101 通信失败。
-  */
+  * @brief  娴嬮噺 CH8 鍏ㄩ儴閫氶亾骞惰绠楀綋鍓嶆ā寮忎笅鐨勭粨鏋溿€?  * @param[in,out] testValue 浣跨敤 CH8_*_BASE 鍋忕Щ鐨勬祴閲忕紦鍐插尯銆?  * @param[in] referenceData 搴斿彉妯″紡涓嬫瘡涓€氶亾鐨勫弬鑰冨€笺€?  * @param[in] mode 0锛氬簲鍙橈紱1锛氶鐜囨ā鏁帮紱2锛氶鐜囦慨姝ｃ€?  * @param[in] kValue 搴斿彉璁＄畻绯绘暟銆?  * @param[in] correctScale 棰戠巼淇绯绘暟銆?  * @retval 0 琛ㄧず鎴愬姛锛岄潪 0 琛ㄧず VM101 閫氫俊澶辫触銆?  */
 int CH8_MeasureAllChannels(int *testValue, int *referenceData, u8 mode, float kValue, float correctScale)
 {
 	int i = 0;
@@ -240,15 +197,7 @@ int CH8_MeasureAllChannels(int *testValue, int *referenceData, u8 mode, float kV
 }
 
 /**
-  * @brief  测量单个 CH8 通道并刷新当前模式下的结果。
-  * @param[in,out] testValue 使用 CH8_*_BASE 偏移的测量缓冲区。
-  * @param[in] referenceData 应变模式下每个通道的参考值。
-  * @param[in] channelIndex 从 0 开始的通道序号。
-  * @param[in] mode 0：应变；1：频率模数；2：频率修正。
-  * @param[in] kValue 应变计算系数。
-  * @param[in] correctScale 频率修正系数。
-  * @retval 0 表示成功，非 0 表示通道无效或 VM101 通信失败。
-  */
+  * @brief  娴嬮噺鍗曚釜 CH8 閫氶亾骞跺埛鏂板綋鍓嶆ā寮忎笅鐨勭粨鏋溿€?  * @param[in,out] testValue 浣跨敤 CH8_*_BASE 鍋忕Щ鐨勬祴閲忕紦鍐插尯銆?  * @param[in] referenceData 搴斿彉妯″紡涓嬫瘡涓€氶亾鐨勫弬鑰冨€笺€?  * @param[in] channelIndex 浠?0 寮€濮嬬殑閫氶亾搴忓彿銆?  * @param[in] mode 0锛氬簲鍙橈紱1锛氶鐜囨ā鏁帮紱2锛氶鐜囦慨姝ｃ€?  * @param[in] kValue 搴斿彉璁＄畻绯绘暟銆?  * @param[in] correctScale 棰戠巼淇绯绘暟銆?  * @retval 0 琛ㄧず鎴愬姛锛岄潪 0 琛ㄧず閫氶亾鏃犳晥鎴?VM101 閫氫俊澶辫触銆?  */
 int CH8_MeasureChannel(int *testValue, int *referenceData, u8 channelIndex, u8 mode, float kValue, float correctScale)
 {
 	int ret = 0;

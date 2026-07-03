@@ -23,47 +23,13 @@
 /* USER CODE BEGIN 0 */
 /* USER CODE END 0 */
 
-UART_HandleTypeDef hlpuart1;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /**
-  * @brief  Initialize LPUART1 for the 433 MHz wireless module.
-  * @retval None
-  */
-void MX_LPUART1_UART_Init(void)
-{
-
-  /* USER CODE BEGIN LPUART1_Init 0 */
-  /* USER CODE END LPUART1_Init 0 */
-
-  /* USER CODE BEGIN LPUART1_Init 1 */
-
-  /* USER CODE END LPUART1_Init 1 */
-  hlpuart1.Instance = LPUART1;
-  hlpuart1.Init.BaudRate = 9600;
-  hlpuart1.Init.WordLength = UART_WORDLENGTH_8B;
-  hlpuart1.Init.StopBits = UART_STOPBITS_1;
-  hlpuart1.Init.Parity = UART_PARITY_NONE;
-  hlpuart1.Init.Mode = UART_MODE_TX_RX;
-  hlpuart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  hlpuart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  hlpuart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  hlpuart1.gState = HAL_UART_STATE_RESET; //是否必要?20220728
-  if (HAL_UART_Init(&hlpuart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN LPUART1_Init 2 */
-
-  /* USER CODE END LPUART1_Init 2 */
-
-}
-
-/**
-  * @brief  Initialize USART1 for the VM101 measurement module.
-  * @param[in] baud USART1 baud rate.
-  * @retval None
+  * @brief  初始化 485/VM101 通信串口 USART1。
+  * @param[in] baud USART1 波特率。
+  * @retval 无
   */
 void MX_USART1_UART_Init(u32 baud)
 {
@@ -93,9 +59,9 @@ void MX_USART1_UART_Init(u32 baud)
 }
 
 /**
-  * @brief  Initialize USART2 for the Zigbee module.
-  * @param[in] baud USART2 baud rate.
-  * @retval None
+  * @brief  初始化 Zigbee 通信串口 USART2。
+  * @param[in] baud USART2 波特率。
+  * @retval 无
   */
 void MX_USART2_UART_Init(u32 baud)
 {
@@ -126,42 +92,15 @@ void MX_USART2_UART_Init(u32 baud)
 }
 
 /**
-  * @brief  Initialize UART MSP resources for LPUART1, USART1 or USART2.
-  * @param[in] uartHandle UART handle passed by HAL_UART_Init().
-  * @retval None
+  * @brief  初始化 USART1 或 USART2 的 MSP 资源。
+  * @param[in] uartHandle HAL_UART_Init() 传入的串口句柄。
+  * @retval 无
   */
 void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(uartHandle->Instance==LPUART1)
-  {
-  /* USER CODE BEGIN LPUART1_MspInit 0 */
-
-  /* USER CODE END LPUART1_MspInit 0 */
-    /* LPUART1 clock enable */
-    __HAL_RCC_LPUART1_CLK_ENABLE();
-
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    /**LPUART1 GPIO Configuration
-    PB10     ------> LPUART1_TX
-    PB11     ------> LPUART1_RX
-    */
-    GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-    GPIO_InitStruct.Alternate = GPIO_AF4_LPUART1;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-    /* LPUART1 interrupt Init */
-    HAL_NVIC_SetPriority(LPUART1_IRQn, 1, 0);
-    HAL_NVIC_EnableIRQ(LPUART1_IRQn);
-  /* USER CODE BEGIN LPUART1_MspInit 1 */
-  	__HAL_UART_ENABLE_IT(&hlpuart1, UART_IT_IDLE); 
-  /* USER CODE END LPUART1_MspInit 1 */
-  }
-  else if(uartHandle->Instance==USART1)
+  if(uartHandle->Instance==USART1)
   {
   /* USER CODE BEGIN USART1_MspInit 0 */
 
@@ -218,34 +157,14 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 }
 
 /**
-  * @brief  De-initialize UART MSP resources for LPUART1, USART1 or USART2.
-  * @param[in] uartHandle UART handle passed by HAL_UART_DeInit().
-  * @retval None
+  * @brief  反初始化 USART1 或 USART2 的 MSP 资源。
+  * @param[in] uartHandle HAL_UART_DeInit() 传入的串口句柄。
+  * @retval 无
   */
 void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 {
 
-  if(uartHandle->Instance==LPUART1)
-  {
-  /* USER CODE BEGIN LPUART1_MspDeInit 0 */
-
-  /* USER CODE END LPUART1_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_LPUART1_CLK_DISABLE();
-
-    /**LPUART1 GPIO Configuration
-    PB10     ------> LPUART1_TX
-    PB11     ------> LPUART1_RX
-    */
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10|GPIO_PIN_11);
-
-    /* LPUART1 interrupt Deinit */
-    HAL_NVIC_DisableIRQ(LPUART1_IRQn);
-  /* USER CODE BEGIN LPUART1_MspDeInit 1 */
-
-  /* USER CODE END LPUART1_MspDeInit 1 */
-  }
-  else if(uartHandle->Instance==USART1)
+  if(uartHandle->Instance==USART1)
   {
   /* USER CODE BEGIN USART1_MspDeInit 0 */
 
@@ -289,11 +208,11 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
 /* USER CODE BEGIN 1 */
 /**
-  * @brief  Blocking transmit helper for a UART handle.
-  * @param[in] uartHandle UART handle to transmit through.
-  * @param[in] buffer Data buffer to transmit.
-  * @param[in] len Number of bytes to transmit.
-  * @retval None
+  * @brief  串口阻塞发送辅助函数。
+  * @param[in] uartHandle 待发送的串口句柄。
+  * @param[in] buffer 待发送数据缓冲区。
+  * @param[in] len 待发送字节数。
+  * @retval 无
   */
 void Usart_Printf_Len(UART_HandleTypeDef* uartHandle, uint8_t *buffer,uint16_t len)
 {

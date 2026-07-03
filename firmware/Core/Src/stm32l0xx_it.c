@@ -56,7 +56,6 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern UART_HandleTypeDef hlpuart1;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
@@ -147,24 +146,6 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles EXTI line 4 to 15 interrupts.
-  * @retval None
-  */
-void EXTI4_15_IRQHandler(void)
-{
-  /* USER CODE BEGIN EXTI4_15_IRQn 0 */
-
-	 // HAL_Init();
-	 //SystemClock_Config();
-  /* USER CODE END EXTI4_15_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_11);
-  //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_15);	//中断进入监测
-  /* USER CODE BEGIN EXTI4_15_IRQn 1 */
-  
-  /* USER CODE END EXTI4_15_IRQn 1 */
-}
-
-/**
   * @brief This function handles USART1 global interrupt / USART1 wake-up interrupt through EXTI line 25.
   * @retval None
   */
@@ -214,31 +195,6 @@ void USART2_IRQHandler(void)
   }
 
   /* USER CODE END USART2_IRQn 1 */
-}
-
-/**
-  * @brief This function handles LPUART1 global interrupt / LPUART1 wake-up interrupt through EXTI line 28.
-  * @retval None
-  */
-void LPUART1_IRQHandler(void)
-{
-  /* USER CODE BEGIN LPUART1_IRQn 0 */
-  //433模块通信
-  /* USER CODE END LPUART1_IRQn 0 */
-  HAL_UART_IRQHandler(&hlpuart1);
-  /* USER CODE BEGIN LPUART1_IRQn 1 */
-  if((__HAL_UART_GET_IT(&hlpuart1, UART_IT_IDLE) != RESET) &&(__HAL_UART_GET_FLAG(&hlpuart1, UART_FLAG_IDLE) != RESET) )
-  {
-	  MsgFlag3 = hlpuart1.RxXferSize - hlpuart1.RxXferCount;
-	  if(MsgFlag3)
-	  {
-		  mb_usart3_t.rx_end_flg = 1;
-	  }
-	  hlpuart1.RxState = HAL_UART_STATE_READY; 
-	  __HAL_UART_CLEAR_FLAG(&hlpuart1, UART_CLEAR_IDLEF);
-	  HAL_UART_Receive_IT(&hlpuart1, mb_usart3_t.rx_buf, MB_BUF_SIZE);
-  }
-  /* USER CODE END LPUART1_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

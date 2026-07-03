@@ -2,7 +2,7 @@
 /**
   ******************************************************************************
   * @file           : main.c
-  * @brief          : Main program body
+  * @brief          : 主程序入口
   ******************************************************************************
   * @attention
   *
@@ -40,15 +40,15 @@
 
 /* USER CODE END PM */
 
-/* Private variables ---------------------------------------------------------*/
+/* 私有变量 ------------------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /**
-  * @brief  Configure PLL, bus clocks and UART peripheral clock sources.
-  * @retval None
+  * @brief  配置 PLL、总线时钟和串口外设时钟源。
+  * @retval 无
   */
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
@@ -61,8 +61,8 @@ void SystemClock_Config(void);
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
+  * @brief  应用程序入口。
+  * @retval int 返回值，嵌入式主循环通常不返回。
   */
 int main(void)
 {
@@ -70,28 +70,28 @@ int main(void)
 
   /* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
+  /* MCU 配置 ----------------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  /* 复位所有外设，初始化 Flash 接口和 SysTick。 */
   HAL_Init();
 
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
 
-  /* Configure the system clock */
+  /* 配置系统时钟。 */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
   /* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
+  /* 初始化应用主流程。 */
 
   /* USER CODE BEGIN 2 */
   App_Run();
   /* USER CODE END 2 */
 
-  /* Infinite loop */
+  /* 无限循环 */
   /* USER CODE BEGIN WHILE */
     /* USER CODE END WHILE */
 
@@ -103,8 +103,8 @@ int main(void)
 }
 
 /**
-  * @brief  Configure PLL, bus clocks and UART peripheral clock sources.
-  * @retval None
+  * @brief  配置 PLL、总线时钟和串口外设时钟源。
+  * @retval 无
   */
 void SystemClock_Config(void)
 {
@@ -112,11 +112,10 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
-  /** Configure the main internal regulator output voltage
+  /** 配置主内部稳压器输出电压。
   */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
+  /** 按 RCC_OscInitTypeDef 结构体中的参数初始化 RCC 振荡器。
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -130,7 +129,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB buses clocks
+  /** 初始化 CPU、AHB 和 APB 总线时钟。
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -143,11 +142,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2
-                              |RCC_PERIPHCLK_LPUART1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2;
   PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-  PeriphClkInit.Lpuart1ClockSelection = RCC_LPUART1CLKSOURCE_PCLK1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -159,13 +156,13 @@ void SystemClock_Config(void)
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
+  * @brief  发生错误时执行该函数。
+  * @retval 无
   */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
+  /* 用户可在此添加错误状态上报逻辑。 */
   __disable_irq();
   while (1)
   {
@@ -175,17 +172,15 @@ void Error_Handler(void)
 
 #ifdef  USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
+  * @brief  上报 assert_param 错误所在的源文件名和行号。
+  * @param  file 源文件名指针。
+  * @param  line 发生错误的源代码行号。
+  * @retval 无
   */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* 用户可在此添加文件名和行号上报逻辑。 */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

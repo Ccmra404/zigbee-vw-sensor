@@ -31,7 +31,6 @@ extern "C" {
 
 /* USER CODE END Includes */
 
-extern UART_HandleTypeDef hlpuart1;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
@@ -39,32 +38,26 @@ extern UART_HandleTypeDef huart2;
 /* USER CODE END Private defines */
 
 /**
-  * @brief  Initialize LPUART1 for the 433 MHz wireless module.
-  * @retval None
-  */
-void MX_LPUART1_UART_Init(void);
-
-/**
-  * @brief  Initialize USART1 for the VM101 measurement module.
-  * @param[in] baud USART1 baud rate.
-  * @retval None
+  * @brief  初始化 485/VM101 通信串口 USART1。
+  * @param[in] baud USART1 波特率。
+  * @retval 无
   */
 void MX_USART1_UART_Init(u32 baud);
 
 /**
-  * @brief  Initialize USART2 for the Zigbee module.
-  * @param[in] baud USART2 baud rate.
-  * @retval None
+  * @brief  初始化 Zigbee 通信串口 USART2。
+  * @param[in] baud USART2 波特率。
+  * @retval 无
   */
 void MX_USART2_UART_Init(u32 baud);
 
 /* USER CODE BEGIN Prototypes */
 /**
-  * @brief  Blocking transmit helper for a UART handle.
-  * @param[in] uartHandle UART handle to transmit through.
-  * @param[in] buffer Data buffer to transmit.
-  * @param[in] len Number of bytes to transmit.
-  * @retval None
+  * @brief  串口阻塞发送辅助函数。
+  * @param[in] uartHandle 待发送的串口句柄。
+  * @param[in] buffer 待发送数据缓冲区。
+  * @param[in] len 待发送字节数。
+  * @retval 无
   */
 void Usart_Printf_Len(UART_HandleTypeDef* uartHandle, uint8_t *buffer,uint16_t len);
 
