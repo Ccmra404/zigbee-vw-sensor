@@ -88,8 +88,8 @@ static int VM101_ReadOnce(int *freq, int *temp)
 	u32 start = 0;
 	u8 cmd[8] = {0x01,0x03,0x00,0x00,0x00,0x02,0xC4,0x0B};
 
-	MsgFlag1 = 0;
-	mb_usart1_t.rx_end_flg = 0;
+	MsgFlag2 = 0;
+	mb_usart2_t.rx_end_flg = 0;
 	Usart_Printf_Len(&huart2,cmd,8);
 	start = HAL_GetTick();
 
@@ -99,17 +99,17 @@ static int VM101_ReadOnce(int *freq, int *temp)
 		{
 			return 1;
 		}
-		if(mb_usart1_t.rx_end_flg == 1)
+		if(mb_usart2_t.rx_end_flg == 1)
 		{
-			mb_usart1_t.rx_end_flg = 0;
-			if(MsgFlag1 >= 9
-				&& mb_usart1_t.rx_buf[0] == 0x01
-				&& mb_usart1_t.rx_buf[1] == 0x03
-				&& mb_usart1_t.rx_buf[2] >= 0x04
-				&& crc16_calc(mb_usart1_t.rx_buf,9) == 0)
+			mb_usart2_t.rx_end_flg = 0;
+			if(MsgFlag2 >= 9
+				&& mb_usart2_t.rx_buf[0] == 0x01
+				&& mb_usart2_t.rx_buf[1] == 0x03
+				&& mb_usart2_t.rx_buf[2] >= 0x04
+				&& crc16_calc(mb_usart2_t.rx_buf,9) == 0)
 			{
-				*freq = ((int)mb_usart1_t.rx_buf[3] << 8) | mb_usart1_t.rx_buf[4];
-				*temp = ((int)mb_usart1_t.rx_buf[5] << 8) | mb_usart1_t.rx_buf[6];
+				*freq = ((int)mb_usart2_t.rx_buf[3] << 8) | mb_usart2_t.rx_buf[4];
+				*temp = (((int)mb_usart2_t.rx_buf[5] << 8) | mb_usart2_t.rx_buf[6]) - 500;
 				return 0;
 			}
 		}

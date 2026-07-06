@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "app_uart.h"
+#include "wireless_board.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -152,7 +153,7 @@ void SysTick_Handler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-  //vm501通信
+  // Zigbee模块通信
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
@@ -161,6 +162,24 @@ void USART1_IRQHandler(void)
 		MsgFlag1 = huart1.RxXferSize - huart1.RxXferCount;
 		if(MsgFlag1)
 		{
+			if(ZigbeeDebugCaptureFactoryEnabled)
+			{
+				int i = 0;
+				int offset = ZigbeeDebugFactoryLen;
+				int remain = (int)WIRELESS_ZIGBEE_DEBUG_RX_SIZE - offset;
+				int copyLength = MsgFlag1;
+
+				if(copyLength > remain)
+				{
+					copyLength = remain;
+				}
+				for(i = 0;i < copyLength;i++)
+				{
+					ZigbeeDebugFactoryRx[offset + i] = mb_usart1_t.rx_buf[i];
+				}
+				ZigbeeDebugFactoryLen += copyLength;
+				ZigbeeDebugFactoryFrameCount++;
+			}
 			mb_usart1_t.rx_end_flg = 1;
 		}
 	    huart1.RxState = HAL_UART_STATE_READY; 
@@ -177,7 +196,7 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-  //Zigbee模块通信
+  // VM101传感器通信
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
