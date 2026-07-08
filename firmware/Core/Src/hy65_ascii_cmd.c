@@ -97,8 +97,7 @@ HY65_ASCII_RESULT HY65_AsciiProcess(u8 *rxBuffer, u8 *txBuffer, int msgLen, int 
 			txBuffer[7] = 'S';
 			if('0' == rxBuffer[8])
 			{
-				*errorCode = CH8_MeasureChannel(testValue, RefferenceData, channelIndex, workMode, kindex.fkvalue, fCorrect);
-				*measureFlag = 0;
+				*errorCode = CH8_GetChannelError(channelIndex);
 				if(0 == *errorCode)
 				{
 					HY65_SendRespInt(txBuffer, CH8_ResultForMode(testValue, channelIndex, workMode));
@@ -115,8 +114,7 @@ HY65_ASCII_RESULT HY65_AsciiProcess(u8 *rxBuffer, u8 *txBuffer, int msgLen, int 
 			txBuffer[7] = 'T';
 			if('0' == rxBuffer[8])
 			{
-				*errorCode = CH8_MeasureChannel(testValue, RefferenceData, channelIndex, workMode, kindex.fkvalue, fCorrect);
-				*measureFlag = 0;
+				*errorCode = CH8_GetChannelError(channelIndex);
 				if(0 == *errorCode)
 				{
 					HY65_SendRespInt(txBuffer, testValue[CH8_TEMP_BASE + channelIndex]);
@@ -134,8 +132,7 @@ HY65_ASCII_RESULT HY65_AsciiProcess(u8 *rxBuffer, u8 *txBuffer, int msgLen, int 
 			{
 				if(0 == workMode)
 				{
-					*errorCode = CH8_MeasureChannel(testValue, RefferenceData, channelIndex, workMode, kindex.fkvalue, fCorrect);
-					*measureFlag = 0;
+					*errorCode = CH8_GetChannelError(channelIndex);
 					if(0 != *errorCode)
 					{
 						break;
@@ -144,6 +141,7 @@ HY65_ASCII_RESULT HY65_AsciiProcess(u8 *rxBuffer, u8 *txBuffer, int msgLen, int 
 					__disable_irq();
 					SaveData(APP_CONFIG_ADDR_REF_DATA + APP_CONFIG_REF_DATA_STRIDE_BYTES * channelIndex, RefferenceData[channelIndex]);
 					__enable_irq();
+					*measureFlag = 1;
 				}
 			}
 			else if('1' == rxBuffer[8])
@@ -154,6 +152,7 @@ HY65_ASCII_RESULT HY65_AsciiProcess(u8 *rxBuffer, u8 *txBuffer, int msgLen, int 
 					__disable_irq();
 					SaveData(APP_CONFIG_ADDR_REF_DATA + APP_CONFIG_REF_DATA_STRIDE_BYTES * channelIndex, 0);
 					__enable_irq();
+					*measureFlag = 1;
 				}
 			}
 			break;

@@ -16,6 +16,8 @@
 #define WIRELESS_STATUS_DIAG_RUNNING         5U
 #define WIRELESS_STATUS_DIAG_DONE            6U
 #define WIRELESS_STATUS_TRANSPARENT_TEST     7U
+#define WIRELESS_STATUS_PASSIVE_RX_TEST      8U
+#define WIRELESS_STATUS_PA10_PIN_TEST        9U
 
 static u8 DRF1609CfgMsg[42] = {0xFC,0x27,0x07,0x02,0x65,0x01,0x14,
 								0x01,0x66,0x77,0xAA,0xBB,0x05,0x01,
@@ -40,9 +42,11 @@ volatile u32 ZigbeeDiagHitMaskLow = 0;
 volatile u32 ZigbeeDiagHitMaskHigh = 0;
 volatile u32 ZigbeeDiagLastSlot = 0;
 volatile u32 ZigbeeDiagBaud[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT] = {0};
+volatile u8 ZigbeeDiagFormat[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT] = {0};
 volatile u8 ZigbeeDiagCmd[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT] = {0};
 volatile u8 ZigbeeDiagLen[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT] = {0};
 volatile u8 ZigbeeDiagAck[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT] = {0};
+volatile u32 ZigbeeDiagError[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT] = {0};
 volatile u8 ZigbeeDiagRx[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT][WIRELESS_ZIGBEE_DIAG_RX_SIZE] = {{0}};
 volatile u32 ZigbeeTransparentMagic = 0;
 volatile u32 ZigbeeTransparentBaud = 0;
@@ -50,29 +54,46 @@ volatile u32 ZigbeeTransparentTxCount = 0;
 volatile u32 ZigbeeTransparentRxCount = 0;
 volatile u32 ZigbeeTransparentLastLen = 0;
 volatile u8 ZigbeeTransparentLastRx[WIRELESS_ZIGBEE_TRANSPARENT_RX_SIZE] = {0};
+volatile u32 ZigbeePinMagic = 0;
+volatile u32 ZigbeePinSampleCount = 0;
+volatile u32 ZigbeePinHighCount = 0;
+volatile u32 ZigbeePinLowCount = 0;
+volatile u32 ZigbeePinEdgeCount = 0;
+volatile u32 ZigbeePinFirstBits = 0;
+volatile u32 ZigbeePinLastLevel = 0;
 
 #if WIRELESS_ZIGBEE_DIAG_MODE
 typedef struct
 {
 	u8 id;
+	u8 responseId;
 	const u8 *data;
 	u8 length;
 } WIRELESS_ZIGBEE_DIAG_CMD;
 
-static const u32 ZigbeeDiagBaudList[] = {38400U, 19200U, 9600U, 57600U, 115200U};
+typedef struct
+{
+	u32 parity;
+	u8 id;
+} WIRELESS_ZIGBEE_DIAG_FORMAT;
+
+static const u32 ZigbeeDiagBaudList[] =
+{
+	1200U, 2400U, 4800U, 9600U,
+	19200U, 38400U, 57600U, 115200U
+};
+static const WIRELESS_ZIGBEE_DIAG_FORMAT ZigbeeDiagFormatList[] =
+{
+	{UART_PARITY_NONE, 0U},
+	{UART_PARITY_EVEN, 1U},
+	{UART_PARITY_ODD,  2U}
+};
 static const u8 ZigbeeDiagIns01[] = {0xFC,0x06,0x04,0x44,0x54,0x4B,0x52,0x46,0x81};
 static const u8 ZigbeeDiagIns05[] = {0xFC,0x06,0x0E,0x44,0x54,0x4B,0x52,0x46,0x8B};
-static const u8 ZigbeeDiagIns09[] = {0xFC,0x06,0x10,0x44,0x54,0x4B,0xC7,0x64,0x20};
-static const u8 ZigbeeDiagIns10[] = {0xFC,0x16,0x11,0x44,0x54,0x4B,0xC7,0x64,0x02,0x45,0x9D,0x14,0x01,0xA1,0xA2,0xC3,0xC4,0x06,0x01,0x01,0x01,0x05,0xA6,0x01,0xA9};
-static const u8 ZigbeeDiagIns11[] = {0xFC,0x07,0x15,0x44,0x54,0x4B,0xC7,0x64,0xA9,0xCF};
 static const WIRELESS_ZIGBEE_DIAG_CMD ZigbeeDiagCmdList[] =
 {
-	{1U, ZigbeeDiagIns01, (u8)sizeof(ZigbeeDiagIns01)},
-	{5U, ZigbeeDiagIns05, (u8)sizeof(ZigbeeDiagIns05)},
-	{6U, DRF1609CfgMsg, (u8)sizeof(DRF1609CfgMsg)},
-	{9U, ZigbeeDiagIns09, (u8)sizeof(ZigbeeDiagIns09)},
-	{10U, ZigbeeDiagIns10, (u8)sizeof(ZigbeeDiagIns10)},
-	{11U, ZigbeeDiagIns11, (u8)sizeof(ZigbeeDiagIns11)}
+	{1U, 0x04U, ZigbeeDiagIns01, (u8)sizeof(ZigbeeDiagIns01)},
+	{5U, 0x0EU, ZigbeeDiagIns05, (u8)sizeof(ZigbeeDiagIns05)}
 };
 #endif
 
@@ -202,9 +223,12 @@ static u8 Wireless_SendZigbeeConfigAtBaud(u32 baud)
 }
 
 #if WIRELESS_ZIGBEE_DIAG_MODE
-static u8 Wireless_IsDiagKnownAck(const u8 *rxBuffer, int length)
+static u8 Wireless_IsDiagKnownAck(const u8 *rxBuffer, int length, u8 responseId)
 {
-	if(length >= 3 && rxBuffer[0] == 0xFA)
+	if(length >= 4
+		&& rxBuffer[0] == 0xFA
+		&& rxBuffer[2] == 0x0A
+		&& rxBuffer[3] == responseId)
 	{
 		return 1;
 	}
@@ -225,9 +249,11 @@ static void Wireless_ClearDiagSlots(void)
 	for(slot = 0;slot < (int)WIRELESS_ZIGBEE_DIAG_SLOT_COUNT;slot++)
 	{
 		ZigbeeDiagBaud[slot] = 0;
+		ZigbeeDiagFormat[slot] = 0;
 		ZigbeeDiagCmd[slot] = 0;
 		ZigbeeDiagLen[slot] = 0;
 		ZigbeeDiagAck[slot] = 0;
+		ZigbeeDiagError[slot] = 0;
 		for(index = 0;index < (int)WIRELESS_ZIGBEE_DIAG_RX_SIZE;index++)
 		{
 			ZigbeeDiagRx[slot][index] = 0;
@@ -235,7 +261,8 @@ static void Wireless_ClearDiagSlots(void)
 	}
 }
 
-static void Wireless_SaveDiagSlot(int slot, u32 baud, u8 cmdId, const u8 *rxBuffer, int length)
+static void Wireless_SaveDiagSlot(int slot, u32 baud, u8 formatId,
+	u8 cmdId, u8 responseId, const u8 *rxBuffer, int length, u32 errorCode)
 {
 	int i = 0;
 	int copyLength = length;
@@ -254,9 +281,11 @@ static void Wireless_SaveDiagSlot(int slot, u32 baud, u8 cmdId, const u8 *rxBuff
 	}
 
 	ZigbeeDiagBaud[slot] = baud;
+	ZigbeeDiagFormat[slot] = formatId;
 	ZigbeeDiagCmd[slot] = cmdId;
 	ZigbeeDiagLen[slot] = (u8)copyLength;
-	ZigbeeDiagAck[slot] = Wireless_IsDiagKnownAck(rxBuffer, length);
+	ZigbeeDiagAck[slot] = Wireless_IsDiagKnownAck(rxBuffer, length, responseId);
+	ZigbeeDiagError[slot] = errorCode;
 	for(i = 0;i < copyLength;i++)
 	{
 		ZigbeeDiagRx[slot][i] = rxBuffer[i];
@@ -282,6 +311,7 @@ static void Wireless_SaveDiagSlot(int slot, u32 baud, u8 cmdId, const u8 *rxBuff
 static void Wireless_RunZigbeeDiagForever(void)
 {
 	int baudIndex = 0;
+	int formatIndex = 0;
 	int cmdIndex = 0;
 	int slot = 0;
 	u32 startTick = 0;
@@ -293,41 +323,51 @@ static void Wireless_RunZigbeeDiagForever(void)
 	ZigbeeDiagCycle++;
 	for(baudIndex = 0;baudIndex < (int)(sizeof(ZigbeeDiagBaudList) / sizeof(ZigbeeDiagBaudList[0]));baudIndex++)
 	{
-		MX_USART1_UART_Init(ZigbeeDiagBaudList[baudIndex]);
-		delay_ms(WIRELESS_ZIGBEE_BAUD_SWITCH_GAP_MS);
-		for(cmdIndex = 0;cmdIndex < (int)(sizeof(ZigbeeDiagCmdList) / sizeof(ZigbeeDiagCmdList[0]));cmdIndex++)
+		for(formatIndex = 0;formatIndex < (int)(sizeof(ZigbeeDiagFormatList) / sizeof(ZigbeeDiagFormatList[0]));formatIndex++)
 		{
-			if(slot >= (int)WIRELESS_ZIGBEE_DIAG_SLOT_COUNT)
-			{
-				break;
-			}
-			Wireless_ClearZigbeeRxContext();
-			HAL_UART_Receive_IT(&huart1, mb_usart1_t.rx_buf, MB_BUF_SIZE);
+			MX_USART1_UART_InitEx(ZigbeeDiagBaudList[baudIndex], ZigbeeDiagFormatList[formatIndex].parity);
 			delay_ms(WIRELESS_ZIGBEE_BAUD_SWITCH_GAP_MS);
-			Usart_Printf_Len(&huart1, (u8 *)ZigbeeDiagCmdList[cmdIndex].data, ZigbeeDiagCmdList[cmdIndex].length);
-
-			sawFrame = 0;
-			startTick = uwTick;
-			while(uwTick - startTick < WIRELESS_ZIGBEE_CFG_TIMEOUT_MS)
+			for(cmdIndex = 0;cmdIndex < (int)(sizeof(ZigbeeDiagCmdList) / sizeof(ZigbeeDiagCmdList[0]));cmdIndex++)
 			{
-				if(mb_usart1_t.rx_end_flg == 1)
+				if(slot >= (int)WIRELESS_ZIGBEE_DIAG_SLOT_COUNT)
 				{
-					Wireless_SaveDiagSlot(slot, ZigbeeDiagBaudList[baudIndex],
-						ZigbeeDiagCmdList[cmdIndex].id, mb_usart1_t.rx_buf, MsgFlag1);
-					Wireless_SaveZigbeeDebugFrame(ZigbeeDiagBaudList[baudIndex], mb_usart1_t.rx_buf, MsgFlag1);
-					Wireless_ClearZigbeeRxContext();
-					sawFrame = 1;
 					break;
 				}
+				Wireless_ClearZigbeeRxContext();
+				huart1.ErrorCode = HAL_UART_ERROR_NONE;
+				HAL_UART_Receive_IT(&huart1, mb_usart1_t.rx_buf, MB_BUF_SIZE);
+				delay_ms(WIRELESS_ZIGBEE_BAUD_SWITCH_GAP_MS);
+				Usart_Printf_Len(&huart1, (u8 *)ZigbeeDiagCmdList[cmdIndex].data, ZigbeeDiagCmdList[cmdIndex].length);
+
+				sawFrame = 0;
+				startTick = uwTick;
+				while(uwTick - startTick < WIRELESS_ZIGBEE_CFG_TIMEOUT_MS)
+				{
+					if(mb_usart1_t.rx_end_flg == 1)
+					{
+						Wireless_SaveDiagSlot(slot, ZigbeeDiagBaudList[baudIndex],
+							ZigbeeDiagFormatList[formatIndex].id,
+							ZigbeeDiagCmdList[cmdIndex].id,
+							ZigbeeDiagCmdList[cmdIndex].responseId,
+							mb_usart1_t.rx_buf, MsgFlag1, huart1.ErrorCode);
+						Wireless_SaveZigbeeDebugFrame(ZigbeeDiagBaudList[baudIndex], mb_usart1_t.rx_buf, MsgFlag1);
+						Wireless_ClearZigbeeRxContext();
+						sawFrame = 1;
+						break;
+					}
+				}
+				if(0 == sawFrame)
+				{
+					Wireless_SaveDiagSlot(slot, ZigbeeDiagBaudList[baudIndex],
+						ZigbeeDiagFormatList[formatIndex].id,
+						ZigbeeDiagCmdList[cmdIndex].id,
+						ZigbeeDiagCmdList[cmdIndex].responseId,
+						mb_usart1_t.rx_buf, 0, huart1.ErrorCode);
+				}
+				slot++;
+				ZigbeeDiagSlotCount = (u32)slot;
+				delay_ms(100);
 			}
-			if(0 == sawFrame)
-			{
-				Wireless_SaveDiagSlot(slot, ZigbeeDiagBaudList[baudIndex],
-					ZigbeeDiagCmdList[cmdIndex].id, mb_usart1_t.rx_buf, 0);
-			}
-			slot++;
-			ZigbeeDiagSlotCount = (u32)slot;
-			delay_ms(100);
 		}
 	}
 	ZigbeeDebugLastStatus = WIRELESS_STATUS_DIAG_DONE;
@@ -348,7 +388,6 @@ static void Wireless_FaultBlinkForever(u32 intervalMs)
 	}
 }
 
-#if WIRELESS_ZIGBEE_TRANSPARENT_TEST
 static void Wireless_SaveTransparentRx(const u8 *rxBuffer, int length)
 {
 	int i = 0;
@@ -377,6 +416,102 @@ static void Wireless_SaveTransparentRx(const u8 *rxBuffer, int length)
 		Wireless_SaveZigbeeDebugFrame(WIRELESS_ZIGBEE_FACTORY_BAUDRATE, rxBuffer, copyLength);
 	}
 }
+
+#if WIRELESS_ZIGBEE_PASSIVE_RX_TEST
+static void Wireless_RunPassiveRxTestForever(void)
+{
+	u32 startTick = 0;
+
+	ZigbeeTransparentMagic = 0x52585041UL;
+	ZigbeeTransparentBaud = WIRELESS_ZIGBEE_RUNTIME_BAUDRATE;
+	ZigbeeTransparentTxCount = 0;
+	ZigbeeTransparentRxCount = 0;
+	ZigbeeTransparentLastLen = 0;
+	ZigbeeDebugLastStatus = WIRELESS_STATUS_PASSIVE_RX_TEST;
+
+	MX_USART1_UART_Init(WIRELESS_ZIGBEE_RUNTIME_BAUDRATE);
+	Wireless_ClearZigbeeRxContext();
+	HAL_UART_Receive_IT(&huart1, mb_usart1_t.rx_buf, MB_BUF_SIZE);
+
+	startTick = uwTick;
+	while(uwTick - startTick < 5000U)
+	{
+		if(mb_usart1_t.rx_end_flg == 1)
+		{
+			Wireless_SaveTransparentRx(mb_usart1_t.rx_buf, MsgFlag1);
+			Wireless_SaveZigbeeDebugFrame(WIRELESS_ZIGBEE_RUNTIME_BAUDRATE, mb_usart1_t.rx_buf, MsgFlag1);
+			Wireless_ClearZigbeeRxContext();
+			HAL_UART_Receive_IT(&huart1, mb_usart1_t.rx_buf, MB_BUF_SIZE);
+		}
+	}
+	ZigbeeDebugLastStatus = WIRELESS_STATUS_DIAG_DONE;
+	while(1)
+	{
+		__NOP();
+	}
+}
+#endif
+
+#if WIRELESS_ZIGBEE_PA10_PIN_TEST
+static void Wireless_RunPa10PinTestForever(void)
+{
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	u32 startTick = 0;
+	u32 level = 0;
+	u32 lastLevel = 0;
+	u32 sampleIndex = 0;
+
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	GPIO_InitStruct.Pin = GPIO_PIN_9 | GPIO_PIN_10;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	ZigbeePinMagic = 0x50413130UL;
+	ZigbeePinSampleCount = 0;
+	ZigbeePinHighCount = 0;
+	ZigbeePinLowCount = 0;
+	ZigbeePinEdgeCount = 0;
+	ZigbeePinFirstBits = 0;
+	ZigbeePinLastLevel = 0;
+	ZigbeeDebugLastStatus = WIRELESS_STATUS_PA10_PIN_TEST;
+
+	lastLevel = ((GPIOA->IDR & GPIO_PIN_10) != 0U) ? 1U : 0U;
+	startTick = uwTick;
+	while(uwTick - startTick < 5000U)
+	{
+		level = ((GPIOA->IDR & GPIO_PIN_10) != 0U) ? 1U : 0U;
+		if(sampleIndex < 32U && level != 0U)
+		{
+			ZigbeePinFirstBits |= (1UL << sampleIndex);
+		}
+		if(level != 0U)
+		{
+			ZigbeePinHighCount++;
+		}
+		else
+		{
+			ZigbeePinLowCount++;
+		}
+		if(level != lastLevel)
+		{
+			ZigbeePinEdgeCount++;
+			lastLevel = level;
+		}
+		sampleIndex++;
+	}
+	ZigbeePinSampleCount = sampleIndex;
+	ZigbeePinLastLevel = lastLevel;
+	ZigbeeDebugLastStatus = WIRELESS_STATUS_DIAG_DONE;
+	while(1)
+	{
+		__NOP();
+	}
+}
+#endif
+
+#if WIRELESS_ZIGBEE_TRANSPARENT_TEST
 
 static void Wireless_RunTransparentTestForever(void)
 {
@@ -464,7 +599,11 @@ void Wireless_StartRuntimeUarts(void)
 {
 	MX_GPIO_Init();
 	delay_ms(2000);
-#if WIRELESS_ZIGBEE_TRANSPARENT_TEST
+#if WIRELESS_ZIGBEE_PA10_PIN_TEST
+	Wireless_RunPa10PinTestForever();
+#elif WIRELESS_ZIGBEE_PASSIVE_RX_TEST
+	Wireless_RunPassiveRxTestForever();
+#elif WIRELESS_ZIGBEE_TRANSPARENT_TEST
 	Wireless_RunTransparentTestForever();
 #elif WIRELESS_ZIGBEE_DIAG_MODE
 	Wireless_RunZigbeeDiagForever();

@@ -14,6 +14,42 @@
 
 #define CH8_RESPONSE_MASK ((u8)((1U << CH8_CHANNEL_COUNT) - 1U))
 
+#define VM101_DIAG_RX_SIZE 16U
+
+#define CH8_SCAN_STATUS_OK 0U
+#define CH8_SCAN_STATUS_NOT_READY 1U
+#define CH8_SCAN_STATUS_TIMEOUT 2U
+#define CH8_SCAN_STATUS_SHORT_FRAME 3U
+#define CH8_SCAN_STATUS_WRONG_HEADER 4U
+#define CH8_SCAN_STATUS_BAD_BYTE_COUNT 5U
+#define CH8_SCAN_STATUS_BAD_CRC 6U
+
+extern volatile u32 Vm101DiagMagic;
+extern volatile u32 Vm101DiagCycle;
+extern volatile u32 Vm101DiagDone;
+extern volatile u32 Vm101DiagLastChannel;
+extern volatile u32 Vm101DiagSelectedMask[CH8_CHANNEL_COUNT];
+extern volatile u32 Vm101DiagStatus[CH8_CHANNEL_COUNT];
+extern volatile u32 Vm101DiagRxLen[CH8_CHANNEL_COUNT];
+extern volatile u32 Vm101DiagCrc[CH8_CHANNEL_COUNT];
+extern volatile u32 Vm101DiagFreq[CH8_CHANNEL_COUNT];
+extern volatile u32 Vm101DiagTemp[CH8_CHANNEL_COUNT];
+extern volatile u8 Vm101DiagRx[CH8_CHANNEL_COUNT][VM101_DIAG_RX_SIZE];
+extern volatile u8 Vm101DiagCmd[8];
+extern volatile u32 CH8ScanState;
+extern volatile u32 CH8ScanCurrentChannel;
+extern volatile u32 CH8ScanCycleCount;
+extern volatile u32 CH8ScanReadyMask;
+extern volatile u32 CH8ScanStatus[CH8_CHANNEL_COUNT];
+extern volatile u32 CH8ScanLastTick;
+
+void VM101_RunDiagForever(void);
+void CH8_ScanInit(void);
+void CH8_ScanRestart(void);
+void CH8_ScanProcess(int *testValue, int *referenceData, u8 mode, float kValue, float correctScale);
+u8 CH8_GetChannelError(u8 channelIndex);
+u8 CH8_IsScanBusy(void);
+
 /**
   * @brief  关闭 CH8 的 8 路通道选择输出。
   * @retval 无

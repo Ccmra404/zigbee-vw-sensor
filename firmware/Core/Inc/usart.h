@@ -44,6 +44,8 @@ extern UART_HandleTypeDef huart2;
   */
 void MX_USART1_UART_Init(u32 baud);
 
+void MX_USART1_UART_InitEx(u32 baud, u32 parity);
+
 /**
   * @brief  初始化 Zigbee 通信串口 USART2。
   * @param[in] baud USART2 波特率。

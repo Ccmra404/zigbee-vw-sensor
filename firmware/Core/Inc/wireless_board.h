@@ -7,9 +7,12 @@
 #define WIRELESS_ZIGBEE_RUNTIME_BAUDRATE 19200U
 #define WIRELESS_VM101_BAUDRATE          9600U
 #define WIRELESS_ZIGBEE_DEBUG_RX_SIZE    32U
+#define WIRELESS_VM101_DIAG_MODE         0U
 #define WIRELESS_ZIGBEE_DIAG_MODE        0U
-#define WIRELESS_ZIGBEE_TRANSPARENT_TEST 1U
-#define WIRELESS_ZIGBEE_DIAG_SLOT_COUNT  40U
+#define WIRELESS_ZIGBEE_PASSIVE_RX_TEST  0U
+#define WIRELESS_ZIGBEE_PA10_PIN_TEST    0U
+#define WIRELESS_ZIGBEE_TRANSPARENT_TEST 0U
+#define WIRELESS_ZIGBEE_DIAG_SLOT_COUNT  64U
 #define WIRELESS_ZIGBEE_DIAG_RX_SIZE     24U
 #define WIRELESS_ZIGBEE_TRANSPARENT_RX_SIZE 64U
 
@@ -29,9 +32,11 @@ extern volatile u32 ZigbeeDiagHitMaskLow;
 extern volatile u32 ZigbeeDiagHitMaskHigh;
 extern volatile u32 ZigbeeDiagLastSlot;
 extern volatile u32 ZigbeeDiagBaud[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT];
+extern volatile u8 ZigbeeDiagFormat[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT];
 extern volatile u8 ZigbeeDiagCmd[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT];
 extern volatile u8 ZigbeeDiagLen[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT];
 extern volatile u8 ZigbeeDiagAck[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT];
+extern volatile u32 ZigbeeDiagError[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT];
 extern volatile u8 ZigbeeDiagRx[WIRELESS_ZIGBEE_DIAG_SLOT_COUNT][WIRELESS_ZIGBEE_DIAG_RX_SIZE];
 extern volatile u32 ZigbeeTransparentMagic;
 extern volatile u32 ZigbeeTransparentBaud;
@@ -39,6 +44,13 @@ extern volatile u32 ZigbeeTransparentTxCount;
 extern volatile u32 ZigbeeTransparentRxCount;
 extern volatile u32 ZigbeeTransparentLastLen;
 extern volatile u8 ZigbeeTransparentLastRx[WIRELESS_ZIGBEE_TRANSPARENT_RX_SIZE];
+extern volatile u32 ZigbeePinMagic;
+extern volatile u32 ZigbeePinSampleCount;
+extern volatile u32 ZigbeePinHighCount;
+extern volatile u32 ZigbeePinLowCount;
+extern volatile u32 ZigbeePinEdgeCount;
+extern volatile u32 ZigbeePinFirstBits;
+extern volatile u32 ZigbeePinLastLevel;
 
 /**
   * @brief  鍒濆鍖栨垨鏍￠獙 Zigbee 妯″潡锛涘け璐ユ椂鍋滅暀鍦ㄦ晠闅滈棯鐏姸鎬併€?  * @retval 鏃?  */

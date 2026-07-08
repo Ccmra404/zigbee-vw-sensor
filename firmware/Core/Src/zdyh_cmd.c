@@ -165,8 +165,7 @@ ZDYH_RESULT ZDYH_Process(u8 *rxBuffer, u8 *txBuffer, int *testValue,
 			if(CH8_IsLocalChannelId(CurrentChannelNumber, data32))
 			{
 				channelIndex = CH8_ChannelIndexFromId(CurrentChannelNumber, data32);
-				*errorCode = CH8_MeasureChannel(testValue, RefferenceData, channelIndex, workMode, kindex.fkvalue, fCorrect);
-				*measureFlag = 0;
+				*errorCode = CH8_GetChannelError(channelIndex);
 			}
 			else
 			{
@@ -221,8 +220,7 @@ ZDYH_RESULT ZDYH_Process(u8 *rxBuffer, u8 *txBuffer, int *testValue,
 			channelIndex = CH8_ChannelIndexFromId(CurrentChannelNumber, data32);
 			if(0 == tmp && 0 == workMode)
 			{
-				*errorCode = CH8_MeasureChannel(testValue, RefferenceData, channelIndex, workMode, kindex.fkvalue, fCorrect);
-				*measureFlag = 0;
+				*errorCode = CH8_GetChannelError(channelIndex);
 				if(0 != *errorCode)
 				{
 					break;
@@ -270,6 +268,7 @@ ZDYH_RESULT ZDYH_Process(u8 *rxBuffer, u8 *txBuffer, int *testValue,
 			__disable_irq();
 			SaveData(APP_CONFIG_ADDR_REF_DATA + APP_CONFIG_REF_DATA_STRIDE_BYTES * channelIndex, RefferenceData[channelIndex]);
 			__enable_irq();
+			*measureFlag = 1;
 			break;
 		case 0x05:
 			groupID = rxBuffer[26];

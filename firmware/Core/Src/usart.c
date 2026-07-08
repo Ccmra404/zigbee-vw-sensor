@@ -33,6 +33,11 @@ UART_HandleTypeDef huart2;
   */
 void MX_USART1_UART_Init(u32 baud)
 {
+  MX_USART1_UART_InitEx(baud, UART_PARITY_NONE);
+}
+
+void MX_USART1_UART_InitEx(u32 baud, u32 parity)
+{
 
   /* USER CODE BEGIN USART1_Init 0 */
   /* USER CODE END USART1_Init 0 */
@@ -41,9 +46,9 @@ void MX_USART1_UART_Init(u32 baud)
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
   huart1.Init.BaudRate = baud;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.WordLength = (parity == UART_PARITY_NONE) ? UART_WORDLENGTH_8B : UART_WORDLENGTH_9B;
   huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Parity = parity;
   huart1.Init.Mode = UART_MODE_TX_RX;
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;

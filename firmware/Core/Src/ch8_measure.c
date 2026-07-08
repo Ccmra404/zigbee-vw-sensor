@@ -3,8 +3,45 @@
 #include "usart.h"
 
 #define CH8_SELECT_GAP_MS 10U
-#define CH8_SELECT_SETTLE_MS 80U
+#define CH8_SELECT_SETTLE_MS 6000U
 #define VM101_TIMEOUT_MS 6000U
+#define VM101_DIAG_READ_INTERVAL_MS 6000U
+#define VM101_DIAG_START_DELAY_MS 1000U
+
+#define VM101_DIAG_STATUS_OK 0U
+#define VM101_DIAG_STATUS_TIMEOUT 1U
+#define VM101_DIAG_STATUS_SHORT_FRAME 2U
+#define VM101_DIAG_STATUS_WRONG_HEADER 3U
+#define VM101_DIAG_STATUS_BAD_BYTE_COUNT 4U
+#define VM101_DIAG_STATUS_BAD_CRC 5U
+
+#define CH8_SCAN_STATE_IDLE 0U
+#define CH8_SCAN_STATE_OFF_GAP 1U
+#define CH8_SCAN_STATE_SETTLE 2U
+#define CH8_SCAN_STATE_SEND 3U
+#define CH8_SCAN_STATE_WAIT 4U
+#define CH8_SCAN_STATE_NEXT 5U
+
+volatile u32 Vm101DiagMagic = 0;
+volatile u32 Vm101DiagCycle = 0;
+volatile u32 Vm101DiagDone = 0;
+volatile u32 Vm101DiagLastChannel = 0;
+volatile u32 Vm101DiagSelectedMask[CH8_CHANNEL_COUNT] = {0};
+volatile u32 Vm101DiagStatus[CH8_CHANNEL_COUNT] = {0};
+volatile u32 Vm101DiagRxLen[CH8_CHANNEL_COUNT] = {0};
+volatile u32 Vm101DiagCrc[CH8_CHANNEL_COUNT] = {0};
+volatile u32 Vm101DiagFreq[CH8_CHANNEL_COUNT] = {0};
+volatile u32 Vm101DiagTemp[CH8_CHANNEL_COUNT] = {0};
+volatile u8 Vm101DiagRx[CH8_CHANNEL_COUNT][VM101_DIAG_RX_SIZE] = {{0}};
+volatile u8 Vm101DiagCmd[8] = {0x01,0x03,0x00,0x00,0x00,0x02,0xC4,0x0B};
+volatile u32 CH8ScanState = CH8_SCAN_STATE_IDLE;
+volatile u32 CH8ScanCurrentChannel = 0;
+volatile u32 CH8ScanCycleCount = 0;
+volatile u32 CH8ScanReadyMask = 0;
+volatile u32 CH8ScanStatus[CH8_CHANNEL_COUNT] = {0};
+volatile u32 CH8ScanLastTick = 0;
+
+static const u8 VM101ReadCmd[8] = {0x01,0x03,0x00,0x00,0x00,0x02,0xC4,0x0B};
 
 static const uint16_t CH8CtrlPins[CH8_CHANNEL_COUNT] = {
 	GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3,
@@ -41,6 +78,147 @@ static void CH8_SelectChannel(u8 channel)
 	{
 		HAL_GPIO_WritePin(GPIOB, CH8CtrlPins[channel], GPIO_PIN_SET);
 		CH8_DelayMs(CH8_SELECT_SETTLE_MS);
+	}
+}
+
+static void VM101_DiagClearChannel(u8 channel)
+{
+	u32 i = 0;
+
+	if(channel >= CH8_CHANNEL_COUNT)
+	{
+		return;
+	}
+
+	Vm101DiagStatus[channel] = VM101_DIAG_STATUS_TIMEOUT;
+	Vm101DiagRxLen[channel] = 0;
+	Vm101DiagCrc[channel] = 0xFFFFFFFFU;
+	Vm101DiagFreq[channel] = 0;
+	Vm101DiagTemp[channel] = 0;
+	for(i = 0;i < VM101_DIAG_RX_SIZE;i++)
+	{
+		Vm101DiagRx[channel][i] = 0;
+	}
+}
+
+static void VM101_DiagArmRx(void)
+{
+	u32 i = 0;
+
+	MsgFlag2 = 0;
+	mb_usart2_t.rx_end_flg = 0;
+	for(i = 0;i < MB_BUF_SIZE;i++)
+	{
+		mb_usart2_t.rx_buf[i] = 0;
+	}
+	if(huart2.RxState == HAL_UART_STATE_READY)
+	{
+		HAL_UART_Receive_IT(&huart2, mb_usart2_t.rx_buf, MB_BUF_SIZE);
+	}
+}
+
+static void VM101_DiagCopyRx(u8 channel, u32 length)
+{
+	u32 i = 0;
+	u32 copyLength = length;
+
+	if(channel >= CH8_CHANNEL_COUNT)
+	{
+		return;
+	}
+	if(copyLength > VM101_DIAG_RX_SIZE)
+	{
+		copyLength = VM101_DIAG_RX_SIZE;
+	}
+	for(i = 0;i < copyLength;i++)
+	{
+		Vm101DiagRx[channel][i] = mb_usart2_t.rx_buf[i];
+	}
+}
+
+static void VM101_DiagReadChannel(u8 channel)
+{
+	u32 start = 0;
+	u32 length = 0;
+	u32 crc = 0;
+
+	VM101_DiagClearChannel(channel);
+	CH8_SelectChannel(channel);
+	Vm101DiagLastChannel = channel;
+	Vm101DiagSelectedMask[channel] = GPIOB->ODR & 0x00FFU;
+	CH8_DelayMs(VM101_DIAG_READ_INTERVAL_MS);
+	VM101_DiagArmRx();
+	Usart_Printf_Len(&huart2, (uint8_t *)Vm101DiagCmd, 8);
+	start = HAL_GetTick();
+
+	while(1)
+	{
+		if(mb_usart2_t.rx_end_flg == 1)
+		{
+			length = (u32)(uint8_t)MsgFlag2;
+			mb_usart2_t.rx_end_flg = 0;
+			Vm101DiagRxLen[channel] = length;
+			VM101_DiagCopyRx(channel, length);
+
+			if(length < 9U)
+			{
+				Vm101DiagStatus[channel] = VM101_DIAG_STATUS_SHORT_FRAME;
+				return;
+			}
+			if(mb_usart2_t.rx_buf[0] != 0x01 || mb_usart2_t.rx_buf[1] != 0x03)
+			{
+				Vm101DiagStatus[channel] = VM101_DIAG_STATUS_WRONG_HEADER;
+				return;
+			}
+			if(mb_usart2_t.rx_buf[2] < 0x04)
+			{
+				Vm101DiagStatus[channel] = VM101_DIAG_STATUS_BAD_BYTE_COUNT;
+				return;
+			}
+
+			crc = crc16_calc(mb_usart2_t.rx_buf, 9);
+			Vm101DiagCrc[channel] = crc;
+			if(crc != 0)
+			{
+				Vm101DiagStatus[channel] = VM101_DIAG_STATUS_BAD_CRC;
+				return;
+			}
+
+			Vm101DiagFreq[channel] = ((u32)mb_usart2_t.rx_buf[3] << 8) | mb_usart2_t.rx_buf[4];
+			Vm101DiagTemp[channel] = (((u32)mb_usart2_t.rx_buf[5] << 8) | mb_usart2_t.rx_buf[6]) - 500U;
+			Vm101DiagStatus[channel] = VM101_DIAG_STATUS_OK;
+			return;
+		}
+		if(HAL_GetTick() - start >= VM101_TIMEOUT_MS)
+		{
+			Vm101DiagStatus[channel] = VM101_DIAG_STATUS_TIMEOUT;
+			return;
+		}
+	}
+}
+
+void VM101_RunDiagForever(void)
+{
+	u8 channel = 0;
+
+	Vm101DiagMagic = 0x56313031U;
+	Vm101DiagCycle++;
+	Vm101DiagDone = 0;
+	CH8_AllChannelsOff();
+	CH8_DelayMs(VM101_DIAG_START_DELAY_MS);
+
+	for(channel = 0;channel < CH8_CHANNEL_COUNT;channel++)
+	{
+		VM101_DiagReadChannel(channel);
+		CH8_AllChannelsOff();
+	}
+
+	CH8_AllChannelsOff();
+	Vm101DiagDone = 1;
+
+	while(1)
+	{
+		__NOP();
 	}
 }
 
@@ -152,6 +330,175 @@ static void CH8_UpdateChannelResult(int *testValue, const int *referenceData, u8
 		current = testValue[CH8_FREQ_BASE + channelIndex] * correctScale;
 		testValue[CH8_FREQ_BASE + channelIndex] = (int)(current + 0.5);
 	}
+}
+
+static void CH8_ScanArmRx(void)
+{
+	u32 i = 0;
+
+	MsgFlag2 = 0;
+	mb_usart2_t.rx_end_flg = 0;
+	for(i = 0;i < MB_BUF_SIZE;i++)
+	{
+		mb_usart2_t.rx_buf[i] = 0;
+	}
+	if(huart2.RxState == HAL_UART_STATE_READY)
+	{
+		HAL_UART_Receive_IT(&huart2, mb_usart2_t.rx_buf, MB_BUF_SIZE);
+	}
+}
+
+static u32 CH8_ScanDecodeFrame(int *testValue, const int *referenceData, u8 mode, float kValue, float correctScale)
+{
+	u8 channel = (u8)CH8ScanCurrentChannel;
+	u32 length = (u32)(uint8_t)MsgFlag2;
+	u32 crc = 0;
+
+	if(length < 9U)
+	{
+		return CH8_SCAN_STATUS_SHORT_FRAME;
+	}
+	if(mb_usart2_t.rx_buf[0] != 0x01 || mb_usart2_t.rx_buf[1] != 0x03)
+	{
+		return CH8_SCAN_STATUS_WRONG_HEADER;
+	}
+	if(mb_usart2_t.rx_buf[2] < 0x04)
+	{
+		return CH8_SCAN_STATUS_BAD_BYTE_COUNT;
+	}
+
+	crc = crc16_calc(mb_usart2_t.rx_buf, 9);
+	if(crc != 0)
+	{
+		return CH8_SCAN_STATUS_BAD_CRC;
+	}
+
+	testValue[CH8_FREQ_BASE + channel] = ((int)mb_usart2_t.rx_buf[3] << 8) | mb_usart2_t.rx_buf[4];
+	testValue[CH8_TEMP_BASE + channel] = (((int)mb_usart2_t.rx_buf[5] << 8) | mb_usart2_t.rx_buf[6]) - 500;
+	CH8_UpdateChannelResult(testValue, referenceData, channel, mode, kValue, correctScale);
+	CH8ScanReadyMask |= (1U << channel);
+
+	return CH8_SCAN_STATUS_OK;
+}
+
+void CH8_ScanInit(void)
+{
+	u8 i = 0;
+
+	CH8_AllChannelsOff();
+	CH8ScanState = CH8_SCAN_STATE_IDLE;
+	CH8ScanCurrentChannel = 0;
+	CH8ScanCycleCount = 0;
+	CH8ScanReadyMask = 0;
+	CH8ScanLastTick = HAL_GetTick();
+	for(i = 0;i < CH8_CHANNEL_COUNT;i++)
+	{
+		CH8ScanStatus[i] = CH8_SCAN_STATUS_NOT_READY;
+	}
+}
+
+void CH8_ScanRestart(void)
+{
+	CH8_AllChannelsOff();
+	CH8ScanState = CH8_SCAN_STATE_IDLE;
+	CH8ScanCurrentChannel = 0;
+	CH8ScanLastTick = HAL_GetTick();
+}
+
+void CH8_ScanProcess(int *testValue, int *referenceData, u8 mode, float kValue, float correctScale)
+{
+	u32 now = HAL_GetTick();
+	u8 channel = (u8)CH8ScanCurrentChannel;
+
+	if(channel >= CH8_CHANNEL_COUNT)
+	{
+		CH8ScanCurrentChannel = 0;
+		channel = 0;
+	}
+
+	switch(CH8ScanState)
+	{
+		case CH8_SCAN_STATE_IDLE:
+			CH8_AllChannelsOff();
+			CH8ScanLastTick = now;
+			CH8ScanState = CH8_SCAN_STATE_OFF_GAP;
+			break;
+
+		case CH8_SCAN_STATE_OFF_GAP:
+			if(now - CH8ScanLastTick >= CH8_SELECT_GAP_MS)
+			{
+				HAL_GPIO_WritePin(GPIOB, CH8CtrlPins[channel], GPIO_PIN_SET);
+				CH8ScanLastTick = now;
+				CH8ScanState = CH8_SCAN_STATE_SETTLE;
+			}
+			break;
+
+		case CH8_SCAN_STATE_SETTLE:
+			if(now - CH8ScanLastTick >= CH8_SELECT_SETTLE_MS)
+			{
+				CH8ScanState = CH8_SCAN_STATE_SEND;
+			}
+			break;
+
+		case CH8_SCAN_STATE_SEND:
+			CH8_ScanArmRx();
+			Usart_Printf_Len(&huart2, (uint8_t *)VM101ReadCmd, 8);
+			CH8ScanLastTick = now;
+			CH8ScanState = CH8_SCAN_STATE_WAIT;
+			break;
+
+		case CH8_SCAN_STATE_WAIT:
+			if(mb_usart2_t.rx_end_flg == 1)
+			{
+				mb_usart2_t.rx_end_flg = 0;
+				CH8ScanStatus[channel] = CH8_ScanDecodeFrame(testValue, referenceData, mode, kValue, correctScale);
+				CH8_AllChannelsOff();
+				CH8ScanState = CH8_SCAN_STATE_NEXT;
+			}
+			else if(now - CH8ScanLastTick >= VM101_TIMEOUT_MS)
+			{
+				CH8ScanStatus[channel] = CH8_SCAN_STATUS_TIMEOUT;
+				CH8_AllChannelsOff();
+				CH8ScanState = CH8_SCAN_STATE_NEXT;
+			}
+			break;
+
+		case CH8_SCAN_STATE_NEXT:
+			CH8ScanCurrentChannel++;
+			if(CH8ScanCurrentChannel >= CH8_CHANNEL_COUNT)
+			{
+				CH8ScanCurrentChannel = 0;
+				CH8ScanCycleCount++;
+			}
+			CH8ScanState = CH8_SCAN_STATE_IDLE;
+			break;
+
+		default:
+			CH8_ScanRestart();
+			break;
+	}
+}
+
+u8 CH8_GetChannelError(u8 channelIndex)
+{
+	if(channelIndex >= CH8_CHANNEL_COUNT)
+	{
+		return 1;
+	}
+	if(0 == (CH8ScanReadyMask & (1U << channelIndex)))
+	{
+		return 1;
+	}
+	if(CH8ScanStatus[channelIndex] != CH8_SCAN_STATUS_OK)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+u8 CH8_IsScanBusy(void)
+{
+	return CH8ScanState != CH8_SCAN_STATE_IDLE;
 }
 
 /**

@@ -2,6 +2,7 @@
 #include "app_config.h"
 #include "app_uart.h"
 #include "ch8_measure.h"
+#include "gpio.h"
 #include "hy65_ascii_cmd.h"
 #include "usart.h"
 #include "wireless_board.h"
@@ -34,20 +35,22 @@ static void App_InitRunMode(APP_CONTEXT *ctx)
 
 	uwTick = 0;
 	ctx->zigbeeRefreshTick = 0;
-	ctx->measureFlag = 1;
+	ctx->measureFlag = 0;
 	ctx->relayMode = 0;
 	ctx->bcState = 0;
 	ctx->bcResp = 0;
 	ctx->lastBroadcastId = 0;
+	CH8_ScanInit();
 }
 
 static void App_RunPendingMeasurement(APP_CONTEXT *ctx)
 {
 	if(ctx->measureFlag)
 	{
-		ctx->errorCode = CH8_MeasureAllChannels(TestValue, RefferenceData, workMode, kindex.fkvalue, fCorrect);
+		CH8_ScanRestart();
 		ctx->measureFlag = 0;
 	}
+	CH8_ScanProcess(TestValue, RefferenceData, workMode, kindex.fkvalue, fCorrect);
 }
 
 static void App_RefreshZigbeeReceiver(APP_CONTEXT *ctx)
@@ -153,6 +156,13 @@ void App_Run(void)
 {
 	APP_CONTEXT ctx;
 
+#if WIRELESS_VM101_DIAG_MODE
+	AppUart_InitContexts();
+	MX_GPIO_Init();
+	MX_USART2_UART_Init(WIRELESS_VM101_BAUDRATE);
+	HAL_UART_Receive_IT(&huart2, mb_usart2_t.rx_buf, MB_BUF_SIZE);
+	VM101_RunDiagForever();
+#else
 	memset(&ctx, 0, sizeof(ctx));
 	ctx.errorCode = 1;
 	ctx.lastCmd = 0x80;
@@ -165,4 +175,5 @@ void App_Run(void)
 	{
 		App_RunModeLoop(&ctx);
 	}
+#endif
 }
